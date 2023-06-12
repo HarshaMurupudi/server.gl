@@ -6,7 +6,7 @@ const { glDB } = require('../config/database');
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const jobs = await Job.findAll({});
+    const jobs = await Job.findAll({ limit: 5 });
     res.status(200).json({
       status: 'success',
       results: jobs.length,

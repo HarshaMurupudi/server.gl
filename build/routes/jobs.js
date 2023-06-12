@@ -18,7 +18,7 @@ const router = express_1.default.Router();
 const { glDB } = require('../config/database');
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const jobs = yield Job.findAll({});
+        const jobs = yield Job.findAll({ limit: 5 });
         res.status(200).json({
             status: 'success',
             results: jobs.length,
