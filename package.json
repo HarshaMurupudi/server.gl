@@ -1,0 +1,37 @@
+{
+  "name": "server.gl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:build": "tsc -w",
+    "start:run": "nodemon build/index.js",
+    "start": "concurrently npm:start:*",
+    "start-dev": "cross-env NODE_ENV=development concurrently npm:start:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarshaMurupudi/server.gl.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HarshaMurupudi/server.gl/issues"
+  },
+  "homepage": "https://github.com/HarshaMurupudi/server.gl#readme",
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.2.5",
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22",
+    "sequelize": "^6.32.0",
+    "tedious": "^16.1.0"
+  }
+}
