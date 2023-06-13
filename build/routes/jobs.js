@@ -45,7 +45,10 @@ router.get('/part-number/:partID', (req, res) => __awaiter(void 0, void 0, void 
             res.download(filePath + fileName);
         }
         else {
-            alert('No file');
+            res.status(400).json({
+                status: 'Error',
+                message: 'No file',
+            });
         }
     }
     catch (error) {
