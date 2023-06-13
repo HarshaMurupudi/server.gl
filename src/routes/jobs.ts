@@ -6,7 +6,7 @@ const { glDB } = require('../config/database');
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const jobs = await Job.findAll({ limit: 5 });
+    const jobs = await Job.findAll({ limit: 50 });
     res.status(200).json({
       status: 'success',
       results: jobs.length,
@@ -24,13 +24,19 @@ router.get('/part-number/:partID', async (req: Request, res: Response) => {
   try {
     const { partID } = req.params;
 
-    // const filePath = '\\\\servername\\path\\Test.pdf';
-    const filePath =
-      '/Users/harsha/Documents/Resume/Full-time/v2/Sriharsha Murupudi - Resume.pdf';
+    var isWin = process.platform === 'win32';
 
-    res.download(filePath);
+    const filePath = isWin
+      ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
+      : `//gl-fs01/GLIParts/${partID}/Current/Prints/Image/`;
 
-    console.log(partID);
+    const fileName = fs.readdirSync(filePath)[0];
+
+    if (fileName) {
+      res.download(filePath + fileName);
+    } else {
+      alert('No file');
+    }
   } catch (error: any) {
     res.status(400).json({
       status: 'Error',

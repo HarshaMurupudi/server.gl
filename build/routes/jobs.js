@@ -13,12 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
 const Job = require('../models/Job');
 const router = express_1.default.Router();
 const { glDB } = require('../config/database');
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const jobs = yield Job.findAll({ limit: 5 });
+        const jobs = yield Job.findAll({ limit: 50 });
         res.status(200).json({
             status: 'success',
             results: jobs.length,
@@ -35,10 +36,17 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 router.get('/part-number/:partID', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { partID } = req.params;
-        // const filePath = '\\\\servername\\path\\Test.pdf';
-        const filePath = '/Users/harsha/Documents/Resume/Full-time/v2/Sriharsha Murupudi - Resume.pdf';
-        res.download(filePath);
-        console.log(partID);
+        var isWin = process.platform === 'win32';
+        const filePath = isWin
+            ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
+            : `//gl-fs01/GLIParts/${partID}/Current/Prints/Image/`;
+        const fileName = fs_1.default.readdirSync(filePath)[0];
+        if (fileName) {
+            res.download(filePath + fileName);
+        }
+        else {
+            alert('No file');
+        }
     }
     catch (error) {
         res.status(400).json({
