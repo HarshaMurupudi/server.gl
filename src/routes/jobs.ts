@@ -8,7 +8,7 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     // const jobs = await Job.findAll({ limit: 50 });
 
-    const jobs = glDB.query(
+    const jobs = await glDB.query(
       `
           SELECT DISTINCT
     (t1.Job), t3.[Notes], Part_Number, Customer, Status, Description, Order_Quantity, Completed_Quantity, CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date
