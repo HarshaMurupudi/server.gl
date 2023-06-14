@@ -19,11 +19,21 @@ const router = express_1.default.Router();
 const { glDB } = require('../config/database');
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const jobs = yield Job.findAll({ limit: 50 });
+        // const jobs = await Job.findAll({ limit: 50 });
+        const jobs = glDB.query(`
+          SELECT DISTINCT
+    (t1.Job), t3.[Notes], Part_Number, Customer, Status, Description, Order_Quantity, Completed_Quantity, CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date
+    FROM [Production].[dbo].[Job] AS t1
+    INNER JOIN (SELECT Job, Promised_Date, Requested_Date
+    FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL AND Remaining_Quantity > 0) AS t2 ON t1.Job = t2.Job
+    LEFT JOIN(SELECT * FROM [General_Label].[dbo].[Notes_Final]) AS t3 ON t1.Job = t3.Job
+    WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending')
+    ORDER BY Ship_By_Date ASC;
+          `);
         res.status(200).json({
             status: 'success',
-            results: jobs.length,
-            jobs,
+            results: jobs[0].length,
+            jobs: jobs[0],
         });
     }
     catch (error) {
