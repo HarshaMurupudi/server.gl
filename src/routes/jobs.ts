@@ -10,14 +10,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     const jobs = await glDB.query(
       `
-          SELECT DISTINCT
-    (t1.Job), t3.[Notes], Part_Number, Customer, Status, Description, Order_Quantity, Completed_Quantity, CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date
-    FROM [Production].[dbo].[Job] AS t1
-    INNER JOIN (SELECT Job, Promised_Date, Requested_Date
-    FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL AND Remaining_Quantity > 0) AS t2 ON t1.Job = t2.Job
-    LEFT JOIN(SELECT * FROM [General_Label].[dbo].[Notes_Final]) AS t3 ON t1.Job = t3.Job
-    WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending')
-    ORDER BY Ship_By_Date ASC;
+  SELECT DISTINCT (t1.Job), t3.[Notes], Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date 
+  FROM [Production].[dbo].[Job] AS t1 INNER JOIN ( SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery] 
+    WHERE Packlist IS NULL AND Remaining_Quantity > 0 ) AS t2 ON t1.Job = t2.Job 
+    INNER JOIN ( SELECT * FROM  [Production].[dbo].[Material_Location]) AS t4 ON t1.Part_Number = t4.Material 
+    LEFT JOIN( SELECT * FROM [General_Label].[dbo].[Notes_Final] ) AS t3 ON t1.Job = t3.Job 
+    WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending') ORDER BY Ship_By_Date ASC;
           `
     );
 
