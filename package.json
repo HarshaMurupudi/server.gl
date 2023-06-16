@@ -30,6 +30,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "nodemon": "^2.0.22",
     "sequelize": "^6.32.0",
     "tedious": "^16.1.0"

@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+import Sequelize from 'sequelize';
 const { glDB: db } = require('../config/database');
 
 const Job = db.define(
