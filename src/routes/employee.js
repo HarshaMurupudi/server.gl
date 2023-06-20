@@ -19,7 +19,7 @@ router.post('/auth', async (req, res) => {
 
   try {
     let user = await Employee.findOne({
-      where: { Employee: employeeID, SSN: password },
+      where: { Employee: employeeID, SSN: password, Status: 'Active' },
     });
 
     if (!user) {
