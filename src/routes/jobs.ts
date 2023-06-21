@@ -62,16 +62,9 @@ router.get('/part-number/:partID', async (req: Request, res: Response) => {
 
 router.get('/jobs', async (req: Request, res: Response) => {
   try {
-    const { jobID, partID } = req.query;
-    let jobs = [];
+    // const { jobID, partID } = req.query;
 
-    console.log(req.query, jobID);
-
-    if (jobID) {
-      jobs = await Job.findAll({ where: { Job: jobID } });
-    } else {
-      jobs = await Job.findAll({ Part_Number: partID });
-    }
+    const jobs = await Job.findAll({ where: req.query });
 
     res.status(200).json({
       status: 'success',

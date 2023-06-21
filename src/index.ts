@@ -5,6 +5,9 @@ const cors = require('cors');
 const { glDB } = require('./config/database');
 const jobRoutes = require('./routes/jobs');
 const auth = require('./routes/employee');
+const operationRoutes = require('./routes/operation');
+const poRoutes = require('./routes/po');
+const trackingRoutes = require('./routes/tracking');
 
 glDB
   .authenticate()
@@ -24,6 +27,9 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(jobRoutes);
 app.use(auth);
+app.use(operationRoutes);
+app.use(poRoutes);
+app.use(trackingRoutes);
 
 app.listen(PORT, () => {
   console.log(`Sever is up and listening on port ${PORT}`);

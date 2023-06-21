@@ -1,21 +1,26 @@
 import Sequelize from 'sequelize';
 const { glDB: db } = require('../config/database');
 
-const Employee = db.define(
-  'Employee',
+const Operation = db.define(
+  'Operation',
   {
-    Employee: {
+    Job: {
       primaryKey: true,
       type: Sequelize.STRING,
     },
-
-    SSN: {
+    Work_Center: {
       type: Sequelize.STRING,
     },
-    First_Name: {
+    WC_Vendor: {
+      type: Sequelize.BOOLEAN,
+    },
+    Sequence: {
+      type: Sequelize.INTEGER,
+    },
+    Description: {
       type: Sequelize.STRING,
     },
-    Last_Name: {
+    Status: {
       type: Sequelize.STRING,
     },
   },
@@ -28,9 +33,9 @@ const Employee = db.define(
 
     // If don't want updatedAt
     updatedAt: false,
-    tableName: 'Employee',
-    freezeTableName: true,
+
+    tableName: 'Job_Operation',
   }
 );
 
-module.exports = Employee;
+module.exports = Operation;
