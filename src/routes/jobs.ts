@@ -60,11 +60,60 @@ router.get('/part-number/:partID', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/job-image/:jobID', async (req: Request, res: Response) => {
+  try {
+    const { jobID } = req.params;
+
+    const selectedJob = await Job.findOne({ where: { Job: jobID } });
+    const partID = selectedJob.Part_Number;
+
+    var isWin = process.platform === 'win32';
+
+    const filePath = isWin
+      ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
+      : `//gl-fs01/GLIParts/${partID}/Current/Prints/Image/`;
+
+    const fileName = fs.readdirSync(filePath)[0];
+
+    if (fileName) {
+      res.download(filePath + fileName);
+    } else {
+      res.status(400).json({
+        status: 'Error',
+        message: 'No file',
+      });
+    }
+  } catch (error: any) {
+    res.status(400).json({
+      status: 'Error',
+      message: error.message,
+    });
+  }
+});
+
 router.get('/jobs', async (req: Request, res: Response) => {
   try {
     // const { jobID, partID } = req.query;
 
     const jobs = await Job.findAll({ where: req.query });
+
+    res.status(200).json({
+      status: 'success',
+      results: jobs.length,
+      jobs,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      status: 'Error',
+      message: error.message,
+    });
+  }
+});
+
+router.get('/jobs/pending', async (req: Request, res: Response) => {
+  try {
+    const jobs = await Job.findAll({ where: { Status: 'Closed' } });
 
     res.status(200).json({
       status: 'success',
