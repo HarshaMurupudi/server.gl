@@ -113,7 +113,7 @@ router.get('/jobs', async (req: Request, res: Response) => {
 
 router.get('/jobs/pending', async (req: Request, res: Response) => {
   try {
-    const jobs = await Job.findAll({ where: { Status: 'Closed' } });
+    const jobs = await Job.findAll({ where: { Status: 'Pending' } });
 
     res.status(200).json({
       status: 'success',
