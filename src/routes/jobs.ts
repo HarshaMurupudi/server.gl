@@ -150,15 +150,19 @@ router.get(
 
       const jobs = await glDB.query(
         `
-       select * from
+        SELECT * FROM 
+        (select * from
         (
-        select *
+        select Work_Center, Job as 'OJob'
         , ROW_NUMBER() OVER(PARTITION BY Job ORDER BY Sequence) AS row
         from [dbo].[Job_Operation] WHERE Status = 'S' OR Status = 'C'
         ) as a
-        where row = 1 AND Job IN (
+        where row = 1 AND OJob IN (
         SELECT DISTINCT(Job) FROM [Production].[dbo].[Job] WHERE Status IN ('Active', 'Hold', 'Complete', 'Pending')
-        ) AND Work_Center = 'A-ART';
+        ) AND Work_Center = 'A-ART') a
+        LEFT JOIN
+        (SELECT Job, Part_Number, Status, Description FROM [Production].[dbo].[Job]) b
+        ON a.OJob = b.Job;
         `
       );
 
