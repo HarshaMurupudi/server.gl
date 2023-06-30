@@ -140,4 +140,69 @@ router.get('/jobs/pending', async (req: Request, res: Response) => {
   }
 });
 
+router.get(
+  '/jobsByWorkCenter/:workCenterName',
+  async (req: Request, res: Response) => {
+    try {
+      const { workCenterName } = req.params;
+
+      // const jobs = [await Job.findAll({ limit: 50 })];
+
+      const jobs = await glDB.query(
+        `
+       select * from
+        (
+        select *
+        , ROW_NUMBER() OVER(PARTITION BY Job ORDER BY Sequence) AS row
+        from [dbo].[Job_Operation] WHERE Status = 'S' OR Status = 'C'
+        ) as a
+        where row = 1 AND Job IN (
+        SELECT DISTINCT(Job) FROM [Production].[dbo].[Job] WHERE Status IN ('Active', 'Hold', 'Complete', 'Pending')
+        ) AND Work_Center = 'A-ART';
+        `
+      );
+
+      res.status(200).json({
+        status: 'success',
+        results: jobs[0].length,
+        jobs: jobs[0],
+      });
+    } catch (error: any) {
+      console.log(error);
+      res.status(400).json({
+        status: 'Error',
+        message: error.message,
+      });
+    }
+  }
+);
+
+router.get('/jobs/open', async (req: Request, res: Response) => {
+  try {
+    const { workCenterName } = req.params;
+
+    // const jobs = [await Job.findAll({ limit: 5 })];
+
+    const jobs = await glDB.query(
+      `
+    select distinct j.Job, Part_Number, j.Status, j.Description from [Production].[dbo].[Job] as j
+    inner join(select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
+    on j.Job = jo.Job where j.status in ('Active','Hold', 'Pending', 'Complete');
+        `
+    );
+
+    res.status(200).json({
+      status: 'success',
+      results: jobs[0].length,
+      jobs: jobs[0],
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      status: 'Error',
+      message: error.message,
+    });
+  }
+});
+
 module.exports = router;
