@@ -5,6 +5,16 @@ const Job = require('../models/Job');
 const router = express.Router();
 const { glDB } = require('../config/database');
 
+function compare(a: any, b: any) {
+  if (a.Sequence < b.Sequence) {
+    return -1;
+  }
+  if (a.Sequence > b.Sequence) {
+    return 1;
+  }
+  return 0;
+}
+
 router.get('/', async (req: Request, res: Response) => {
   try {
     // const jobs = [await Job.findAll({ limit: 50 })];
@@ -146,8 +156,6 @@ router.get(
     try {
       const { workCenterName } = req.params;
 
-      // const jobs = [await Job.findAll({ limit: 50 })];
-
       const jobs = await glDB.query(
         `
           SELECT * FROM [Production].[dbo].[Job_Operation] 
@@ -158,10 +166,31 @@ router.get(
         `
       );
 
+      let jobIds = [];
+      let setOfJobs = [...new Set(jobs[0].map((cJob: any) => cJob.Job))];
+
+      for (const job of setOfJobs) {
+        const jobsWithData = jobs[0].filter((iJob: any) => {
+          return iJob.Job == job;
+        });
+        const filteredJobs = jobsWithData.filter(
+          (fJob: any) => fJob.Status === 'S' || fJob.Status === 'O'
+        );
+        const sortedJobs = filteredJobs.sort(compare);
+        if (sortedJobs[0] && sortedJobs[0]['Work_Center'] == 'A-ART') {
+          jobIds.push(job);
+        }
+      }
+
+      const fJobs = await Job.findAll({
+        where: {
+          Job: jobIds,
+        },
+      });
       res.status(200).json({
         status: 'success',
-        results: jobs[0].length,
-        jobs: jobs[0],
+        results: fJobs.length,
+        jobs: fJobs,
       });
     } catch (error: any) {
       console.log(error);
