@@ -12,6 +12,9 @@ const glDB = new Sequelize(
     define: {
       schema: process.env.DB_SCHEMA,
     },
+    "dialectOptions": {
+      "requestTimeout": 300000
+    },
   }
 );
 
