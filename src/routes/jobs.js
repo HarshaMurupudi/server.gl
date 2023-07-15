@@ -6,7 +6,7 @@ const Operation = require("../models/Operation");
 const router = express.Router();
 const { glDB } = require('../config/database');
 
-function compare(a: any, b: any) {
+function compare(a, b) {
   if (a.Sequence < b.Sequence) {
     return -1;
   }
@@ -16,33 +16,73 @@ function compare(a: any, b: any) {
   return 0;
 }
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req, res) => {
   try {
     // const jobs = [await Job.findAll({ limit: 50 })];
 
+    const { startDate = new Date, endDate= '' } = req.query;
+
+   
+    var sdtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
+    var sd = new Date(startDate);
+    var sdlocalISOTime = new Date(sd - sdtzoffset)
+      .toISOString()
+      .slice(0, -1);
+    
+
+    const sdfDate = sdlocalISOTime.split('T')[0];
+
+    var edtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
+    var ed = new Date(endDate);
+    var edlocalISOTime = new Date( ed - edtzoffset)
+      .toISOString()
+      .slice(0, -1);
+
+    const edfDate = edlocalISOTime.split('T')[0];
+
     const jobs = await glDB.query(
       `
-        SELECT Job, SUM(On_Hand_Qty) AS Distinct_On_Hand_Qty, 
-        MAX([Notes]) AS Notes, MAX(Part_Number) AS Part_Number, 
-        MAX(On_Hand_Qty) AS On_Hand_Qty, MAX(Customer) AS Customer, 
-        MAX(Status) AS Status, MAX(Description) AS Description, 
-        MAX(Order_Quantity) AS Order_Quantity, MAX(Completed_Quantity) AS Completed_Quantity, 
-        MAX(CAST(Promised_Date as date)) AS Promised_Date, 
-        MAX(CAST(Requested_Date as date)) AS Requested_Date, 
-        MAX(CAST((Ship_By_Date) AS date)) AS Ship_By_Date
+        SELECT 
+          Job,
+          Production_Notes,
+          Sales_Notes,
+          Engineering_Notes,
+          Job_Plan,
+          Part_Number,
+          Customer,
+          Status, 
+          Description,
+          Order_Quantity,
+          Completed_Quantity,
+          Promised_Date,
+          Requested_Date,
+          Ship_By_Date,
+          Lead_Days
         FROM 
-        (SELECT DISTINCT (t1.Job), t3.[Notes], Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date
-            FROM [Production].[dbo].[Job] AS t1 INNER JOIN ( SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery]
-              WHERE Packlist IS NULL AND Remaining_Quantity > 0 ) AS t2 ON t1.Job = t2.Job
-              INNER JOIN ( SELECT * FROM  [Production].[dbo].[Material_Location]) AS t4 ON t1.Part_Number = t4.Material
-              LEFT JOIN( SELECT * FROM [General_Label].[dbo].[Notes_Final] ) AS t3 ON t1.Job = t3.Job
-              WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending')) a
-        GROUP BY Job;
-      `
+        (SELECT DISTINCT (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
+        t3.[Engineering_Notes], 
+        t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, 
+        Completed_Quantity, Promised_Date, 
+         Requested_Date, (Promised_Date - Lead_Days) AS Ship_By_Date, Lead_Days
+            FROM [Production].[dbo].[Job] AS t1           
+            INNER JOIN 
+            (SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery]
+              WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
+            LEFT JOIN
+            (SELECT * FROM [General_Label].[dbo].[Notes_Final] ) AS t3 ON t1.Job = t3.Job AND (Promised_Date - Lead_Days) = t3.Ship_By_Date
+            LEFT JOIN (SELECT * FROM  [Production].[dbo].[Material_Location]) AS t4 ON t1.Part_Number = t4.Material
+            WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending')
+            ) a
+        WHERE Ship_By_Date between :startDate and :endDate
+        ORDER BY Ship_By_Date;
+      `, {
+        replacements: {
+          startDate: sdfDate, endDate: edfDate
+        }
+      }
     );
 
-    let setOfJobs = [...new Set(jobs[0].map((cJob: any) => cJob.Job))];
-
+    let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
     const fJobs = await Operation.findAll({
       where: {
         Job: setOfJobs,
@@ -50,11 +90,11 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     for (const job of jobs[0]) {
-      const jobsWithData = fJobs.filter((iJob: any) => {
+      const jobsWithData = fJobs.filter((iJob) => {
         return iJob.Job == job.Job;
       });
       const filteredJobs = jobsWithData.filter(
-        (fJob: any) => fJob.Status === 'S' || fJob.Status === 'O'
+        (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
       );
 
       const sortedJobs = filteredJobs.sort(compare);
@@ -68,7 +108,7 @@ router.get('/', async (req: Request, res: Response) => {
       results: jobs[0].length,
       jobs: jobs[0],
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({
       status: 'Error',
       message: error.message,
@@ -76,7 +116,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/part-number/:partID', async (req: Request, res: Response) => {
+router.get('/part-number/:partID', async (req, res) => {
   try {
     const { partID } = req.params;
 
@@ -96,7 +136,7 @@ router.get('/part-number/:partID', async (req: Request, res: Response) => {
         message: 'No file',
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({
       status: 'Error',
       message: error.message,
@@ -104,7 +144,7 @@ router.get('/part-number/:partID', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/job-image/:jobID', async (req: Request, res: Response) => {
+router.get('/job-image/:jobID', async (req, res) => {
   try {
     const { jobID } = req.params;
 
@@ -127,7 +167,7 @@ router.get('/job-image/:jobID', async (req: Request, res: Response) => {
         message: 'No file',
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({
       status: 'Error',
       message: error.message,
@@ -135,7 +175,7 @@ router.get('/job-image/:jobID', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/jobs', async (req: Request, res: Response) => {
+router.get('/jobs', async (req, res) => {
   try {
     // const { jobID, partID } = req.query;
 
@@ -146,7 +186,7 @@ router.get('/jobs', async (req: Request, res: Response) => {
       results: jobs.length,
       jobs,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.log(error);
     res.status(400).json({
       status: 'Error',
@@ -155,7 +195,7 @@ router.get('/jobs', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/jobs/pending', async (req: Request, res: Response) => {
+router.get('/jobs/pending', async (req, res) => {
   try {
     const jobs = await Job.findAll({ where: { Status: 'Pending' } });
 
@@ -164,7 +204,7 @@ router.get('/jobs/pending', async (req: Request, res: Response) => {
       results: jobs.length,
       jobs,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.log(error);
     res.status(400).json({
       status: 'Error',
@@ -175,7 +215,7 @@ router.get('/jobs/pending', async (req: Request, res: Response) => {
 
 router.get(
   '/jobsByWorkCenter/:workCenterName',
-  async (req: Request, res: Response) => {
+  async (req, res) => {
     try {
       const { workCenterName } = req.params;
 
@@ -191,14 +231,14 @@ router.get(
       );
 
       let jobIds = [];
-      let setOfJobs = [...new Set(jobs[0].map((cJob: any) => cJob.Job))];
+      let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
 
       for (const job of setOfJobs) {
-        const jobsWithData = jobs[0].filter((iJob: any) => {
+        const jobsWithData = jobs[0].filter((iJob) => {
           return iJob.Job == job;
         });
         const filteredJobs = jobsWithData.filter(
-          (fJob: any) => fJob.Status === 'S' || fJob.Status === 'O'
+          (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
         );
         const sortedJobs = filteredJobs.sort(compare);
         if (sortedJobs[0] && sortedJobs[0]['Work_Center'] == 'A-ART') {
@@ -220,7 +260,7 @@ router.get(
         results: fJobs[0].length,
         jobs: fJobs[0],
       });
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
       res.status(400).json({
         status: 'Error',
@@ -230,7 +270,7 @@ router.get(
   }
 );
 
-router.get('/jobs/open', async (req: Request, res: Response) => {
+router.get('/jobs/open', async (req, res) => {
   try {
     const { workCenterName } = req.params;
 
@@ -238,15 +278,23 @@ router.get('/jobs/open', async (req: Request, res: Response) => {
 
     const jobs = await glDB.query(
       `
-        select j.Job, j.Customer, Part_Number, j.Status, j.Description, j.Sched_Start, j.Make_Quantity, jo.Note_Text, j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence 
+        select 
+          j.Job, j.Customer, Part_Number, j.Status, j.Description, 
+          j.Sched_Start, j.Make_Quantity, jo.Note_Text,
+          j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence 
         from [Production].[dbo].[Job] as j
-        inner join(select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
-        on j.Job = jo.Job where j.status in ('Active','Hold', 'Pending', 'Complete') AND jo.Work_Center = 'A-ART';
+        inner join
+        (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
+        on j.Job = jo.Job 
+        where 
+        j.status in ('Active','Hold', 'Pending', 'Complete') 
+        AND 
+        jo.Work_Center = 'A-ART';
       `
     );
 
     for (const job of jobs[0]) {
-      const jobsWithData = jobs[0].filter((iJob: any) => {
+      const jobsWithData = jobs[0].filter((iJob) => {
         return iJob.Job == job.Job;
       });
 
@@ -261,7 +309,7 @@ router.get('/jobs/open', async (req: Request, res: Response) => {
       results: jobs[0].length,
       jobs: jobs[0],
     });
-  } catch (error: any) {
+  } catch (error) {
     console.log(error);
     res.status(400).json({
       status: 'Error',
@@ -270,16 +318,16 @@ router.get('/jobs/open', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/job-details/:jobID', async (req: Request, res: Response) => {
+router.get('/job-details/:jobID', async (req, res) => {
   try {
     const { jobID } = req.params;
     const jobs = await glDB.query(
       `
-      SELECT DISTINCT (t1.Job), t3.[Notes], Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, 
+      SELECT DISTINCT (t1.Job), Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, 
       CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, 
       CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date FROM [Production].[dbo].[Job] AS t1 
       INNER JOIN ( SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL 
-      AND Remaining_Quantity > 0 ) AS t2 ON t1.Job = t2.Job INNER JOIN ( SELECT * FROM  [Production].[dbo].[Material_Location]) AS t4 ON t1.Part_Number = t4.Material 
+      ) AS t2 ON t1.Job = t2.Job INNER JOIN ( SELECT * FROM  [Production].[dbo].[Material_Location]) AS t4 ON t1.Part_Number = t4.Material 
       LEFT JOIN( SELECT * FROM [General_Label].[dbo].[Notes_Final] ) AS t3 ON t1.Job = t3.Job WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending') AND t1.Job = :jobID  ORDER BY Ship_By_Date ASC;
       `,
       {
@@ -295,7 +343,7 @@ router.get('/job-details/:jobID', async (req: Request, res: Response) => {
       results: jobs.length,
       jobs: jobs,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.log(error);
     res.status(400).json({
       status: 'Error',

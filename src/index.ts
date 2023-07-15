@@ -8,6 +8,7 @@ const auth = require('./routes/employee');
 const operationRoutes = require('./routes/operation');
 const poRoutes = require('./routes/po');
 const trackingRoutes = require('./routes/tracking');
+const noteRoutes = require('./routes/notes');
 
 glDB
   .authenticate()
@@ -30,6 +31,7 @@ app.use(auth);
 app.use(operationRoutes);
 app.use(poRoutes);
 app.use(trackingRoutes);
+app.use(noteRoutes);
 
 app.listen(PORT, () => {
   console.log(`Sever is up and listening on port ${PORT}`);
