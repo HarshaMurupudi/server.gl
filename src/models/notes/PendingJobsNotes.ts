@@ -1,10 +1,10 @@
 import Sequelize from "sequelize";
-const { glNotesDB: db } = require("../config/database");
+const { glNotesDB: db } = require("../../config/database");
 
-const DeliveryNotes = db.define(
-  "Delivery_Notes",
+const PrintNotes = db.define(
+  "Pending_Jobs_Notes",
   {
-    Delivery_Note_ID: {
+    Pending_Job_Note_ID: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -12,20 +12,14 @@ const DeliveryNotes = db.define(
     Job: {
       type: Sequelize.STRING,
     },
-    Ship_By_Date: {
+    DeliveryKey: {
+      type: Sequelize.INTEGER,
+    },
+    Notes: {
       type: Sequelize.STRING,
     },
-    Production_Notes: {
+    Priority: {
       type: Sequelize.STRING,
-    },
-    Sales_Notes: {
-      type: Sequelize.STRING,
-    },
-    Engineering_Notes: {
-      type: Sequelize.STRING,
-    },
-    Job_Plan: {
-      type: Sequelize.NUMBER,
     },
   },
   {
@@ -38,8 +32,8 @@ const DeliveryNotes = db.define(
     // If don't want updatedAt
     updatedAt: false,
 
-    tableName: "Delivery_Notes",
+    tableName: "Pending_Jobs_Notes",
   }
 );
 
-module.exports = DeliveryNotes;
+module.exports = PrintNotes;

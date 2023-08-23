@@ -22,8 +22,6 @@ router.get('/tracking/:jobID', async (req: Request, res: Response) => {
       }
     );
 
-    console.log(tracking);
-
     res.status(200).json({
       status: 'success',
       results: tracking.length,

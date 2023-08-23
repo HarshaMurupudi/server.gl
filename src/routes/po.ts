@@ -13,7 +13,8 @@ router.get('/po/:jobID', async (req: Request, res: Response) => {
       SELECT j.Job, Part_Number, NRE_Charges, 
       Customer_PO, Order_Quantity, Rev, CAST(Sched_End AS date) AS Sched_End, 
       CAST(Requested_Date AS date) Requested_Date, CAST(Promised_Date AS date) 
-      Promised_Date, Promised_Quantity, d.Shipped_Quantity, Remaining_Quantity, Packlist 
+      Promised_Date, Promised_Quantity, d.Shipped_Quantity, Remaining_Quantity, Packlist,
+      Lead_Days 
       FROM [Production].[dbo].[Job] AS j  
       LEFT JOIN(SELECT Job, Act_Price AS NRE_Charges 
       FROM [Production].[dbo].[Additional_Charge]) AS ac  
@@ -30,7 +31,6 @@ router.get('/po/:jobID', async (req: Request, res: Response) => {
       }
     );
 
-    console.log(po);
 
     res.status(200).json({
       status: 'success',
