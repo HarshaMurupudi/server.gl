@@ -200,7 +200,7 @@ router.get("/jobs", async (req, res) => {
           model: Delivery,
           required: false,
           where: {
-            Packlist: null,
+            // Packlist: null,
           },
         },
       ],

@@ -22,13 +22,15 @@ const partNumber = require("./routes/partNumber");
 //   library: "C:\\work\\server.gl\\src\\services\\MaintainOperationsClass\\clsMaintainWorkCtr.dll",
 //   funcName: "SetWorkCenterStatus",
 //   retType: RetType.Void,
-//   paramsType: [],
+//   paramsType: [ParamsType.String, ParamsType.String],
 //   paramsValue: [],
 // });
 
 // var clrMethod = edge.func({
 //   assemblyFile: 'C:\\work\\server.gl\\src\\services\\MaintainOperationsClass\\clsMaintainWorkCtr.dll',
-//   typeName: 'Main',
+//   // typeName: 'JBMaintainWC',
+//   nameSpace: 'JBMaintainWC',
+//   typeName: 'MaintainWorkCtr',
 //   methodName: 'SetWorkCenterStatus' // This must be Func<object,Task<object>>
 // });
 

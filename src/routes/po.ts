@@ -11,8 +11,8 @@ router.get('/po/:jobID', async (req: Request, res: Response) => {
     const po = await glDB.query(
       `
       SELECT j.Job, Part_Number, NRE_Charges, 
-      Customer_PO, Order_Quantity, Rev, CAST(Sched_End AS date) AS Sched_End, 
-      CAST(Requested_Date AS date) Requested_Date, CAST(Promised_Date AS date) 
+      Customer_PO, Order_Quantity, Rev, Sched_End, 
+      Requested_Date Requested_Date, Promised_Date
       Promised_Date, Promised_Quantity, d.Shipped_Quantity, Remaining_Quantity, Packlist,
       Lead_Days 
       FROM [Production].[dbo].[Job] AS j  
