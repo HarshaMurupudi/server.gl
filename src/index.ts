@@ -1,11 +1,7 @@
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require("express");
 const cors = require("cors");
-
-const { equal } = require("assert");
-const { load, RetType, ParamsType } = require("ffi-rs");
-
-var edge = require("edge-js");
+const dotnet = require('node-api-dotnet');
 
 const { glDB } = require("./config/database");
 const jobRoutes = require("./routes/jobs");
@@ -17,25 +13,15 @@ const noteRoutes = require("./routes/notes");
 const customersRoutes = require("./routes/customer");
 const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
+var path = require('path')
 
-// const r = load({
-//   library: "C:\\work\\server.gl\\src\\services\\MaintainOperationsClass\\clsMaintainWorkCtr.dll",
-//   funcName: "SetWorkCenterStatus",
-//   retType: RetType.Void,
-//   paramsType: [ParamsType.String, ParamsType.String],
-//   paramsValue: [],
-// });
+// require('./services/MaintainOperationsClass/bin/System.Data.Odbc.js');
+// dotnet.load(path.join(__dirname, './services/MaintainOperationsClass/clsMaintainWorkCtr.dll'));
 
-// var clrMethod = edge.func({
-//   assemblyFile: 'C:\\work\\server.gl\\src\\services\\MaintainOperationsClass\\clsMaintainWorkCtr.dll',
-//   // typeName: 'JBMaintainWC',
-//   nameSpace: 'JBMaintainWC',
-//   typeName: 'MaintainWorkCtr',
-//   methodName: 'SetWorkCenterStatus' // This must be Func<object,Task<object>>
-// });
+// const exampleObj = dotnet.JBMaintainWC.MaintainWorkCtr;
+// const exampleClass = new exampleObj()
+// exampleClass.SetPromisedDate(null, null)
 
-// console.log(clrMethod);
-// console.log(r);
 
 
 glDB

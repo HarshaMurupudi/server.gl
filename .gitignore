@@ -9,6 +9,7 @@ dist/
 build/
 
 build/routes/jobs.js
+src/services/MaintainOperationsClass
 
 # Compiled Java class files
 *.class
