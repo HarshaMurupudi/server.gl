@@ -13,7 +13,7 @@ const noteRoutes = require("./routes/notes");
 const customersRoutes = require("./routes/customer");
 const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
-var path = require('path')
+var path = require('path');
 
 // require('./services/MaintainOperationsClass/bin/System.Data.Odbc.js');
 // dotnet.load(path.join(__dirname, './services/MaintainOperationsClass/clsMaintainWorkCtr.dll'));

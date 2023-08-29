@@ -58,7 +58,8 @@ router.get("/", async (req, res) => {
           Lead_Days,
           Rev,
           Text5,
-          DeliveryKey
+          DeliveryKey,
+          Sales_Code
         FROM 
         (
           SELECT DISTINCT 
@@ -66,7 +67,7 @@ router.get("/", async (req, res) => {
             t1.Customer_PO,
             t3.[Engineering_Notes], 
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
-            Completed_Quantity, Promised_Date, 
+            Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
@@ -142,7 +143,6 @@ router.get("/part-number/:partID", async (req, res) => {
         ? fs.readdirSync(filePath)[1]
         : fs.readdirSync(filePath)[0];
 
-    console.log(fileName, partID, fs.readdirSync(filePath));
     if (fileName) {
       res.download(filePath + fileName);
     } else {
@@ -301,7 +301,8 @@ router.get("/jobsByWorkCenter/:workCenterName", async (req, res) => {
           jo.Est_Total_Hrs,
           del.DeliveryKey,
           jo.Job_OperationKey,
-          j.Lead_Days
+          j.Lead_Days,
+          j.Customer_PO
           FROM [dbo].[Job] AS j
           LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
           LEFT JOIN 
@@ -357,7 +358,8 @@ router.get("/jobs/open/:workCenterName", async (req, res) => {
           jo.Est_Total_Hrs,
           del.DeliveryKey,
           jo.Job_OperationKey,
-          j.Lead_Days
+          j.Lead_Days,
+          j.Customer_PO
         from [Production].[dbo].[Job] as j
         left join
         (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
@@ -489,7 +491,8 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
           jo.Est_Total_Hrs,
           del.DeliveryKey,
           jo.Job_OperationKey,
-          j.Lead_Days
+          j.Lead_Days,
+          j.Customer_PO
           FROM [dbo].[Job] AS j
           LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
           LEFT JOIN 
@@ -549,7 +552,8 @@ router.get("/print/jobs/open/:workCenterName", async (req, res) => {
           jo.Est_Total_Hrs,
           del.DeliveryKey,
           jo.Job_OperationKey,
-          j.Lead_Days
+          j.Lead_Days,
+          j.Customer_PO
         from [Production].[dbo].[Job] as j
         left join
         (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
