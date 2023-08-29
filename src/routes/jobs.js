@@ -293,7 +293,7 @@ router.get("/jobsByWorkCenter/:workCenterName", async (req, res) => {
         FROM (
           SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
           j.Sched_Start, j.Make_Quantity, jo.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
-          jo.WC_Vendor,
+          jo.WC_Vendor, jo.Sequence,
           del.Promised_Date,
           Plan_Notes, t3.Priority, t3.Assigned_To,
           ROW_NUMBER() OVER (PARTITION BY
@@ -483,7 +483,7 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
         FROM (
           SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
           j.Sched_Start, j.Make_Quantity, jo.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
-          jo.WC_Vendor,
+          jo.WC_Vendor, jo.Sequence,
           del.Promised_Date,
           Plan_Notes, t3.Priority,
           ROW_NUMBER() OVER (PARTITION BY
