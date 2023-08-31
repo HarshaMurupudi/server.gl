@@ -91,6 +91,7 @@ const upsert = async (model, condition, values) => {
   return model.create({ ...condition, ...values });
 };
 
+
 module.exports = {
   getAuthHeader: getAuthHeader,
   validateConfig: validateConfig,

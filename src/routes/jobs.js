@@ -138,10 +138,19 @@ router.get("/part-number/:partID", async (req, res) => {
       ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
       : `//gl-fs01/GLIParts/${partID}/Current/Prints/Image/`;
 
-    const fileName =
-      fs.readdirSync(filePath)[0] == ".DS_Store"
-        ? fs.readdirSync(filePath)[1]
-        : fs.readdirSync(filePath)[0];
+    // const fileName =
+    //   fs.readdirSync(filePath)[0] == ".DS_Store"
+    //     ? fs.readdirSync(filePath)[1]
+    //     : fs.readdirSync(filePath)[0];
+
+    const allFiles = fs.readdirSync(filePath);
+    const pdf = allFiles.filter(
+      (name) => name.includes(".pdf") && !name.startsWith(".")
+    );
+
+    const fileName = pdf;
+
+    console.log(fileName, filePath);
 
     if (fileName) {
       res.download(filePath + fileName);

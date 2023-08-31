@@ -14,37 +14,6 @@ const customersRoutes = require("./routes/customer");
 const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
 var path = require("path");
-// var edge = require("edge-js");
-
-// require('./services/MaintainOperationsClass/bin/System.Configuration.ConfigurationManager.js');
-// require('./services/MaintainOperationsClass/bin/System.Data.Odbc.js');
-// require('./services/MaintainOperationsClass/bin/Microsoft.Win32.SystemEvents.js');
-// require('./services/MaintainOperationsClass/bin/System.Collections.Immutable.js');
-// require('./services/MaintainOperationsClass/bin/System.Console.js');
-// require('./services/MaintainOperationsClass/bin/System.Drawing.Common.js');
-// require('./services/MaintainOperationsClass/bin/System.Reflection.Metadata.js');
-// require('./services/MaintainOperationsClass/bin/System.Reflection.MetadataLoadContext.js');
-// require('./services/MaintainOperationsClass/bin/System.Runtime.CompilerServices.Unsafe.js');
-// require('./services/MaintainOperationsClass/bin/System.Runtime.js');
-// require('./services/MaintainOperationsClass/bin/System.Security.Cryptography.ProtectedData.js');
-// require('./services/MaintainOperationsClass/bin/System.Security.Permissions.js');
-// require('./services/MaintainOperationsClass/bin/System.Text.Encoding.CodePages.js');
-// require('./services/MaintainOperationsClass/bin/System.Windows.Extensions.js');
-
-// dotnet.load(path.join(__dirname, './services/MaintainOperationsClass/clsMaintainWorkCtr.dll'));
-
-// const exampleObj = dotnet.JBMaintainWC.MaintainWorkCtr;
-// const exampleClass = new exampleObj()
-// exampleClass.SetPromisedDate(null, null)
-
-// var clrMethod = edge.func({
-//   // assemblyFile: 'C:\\work\\server.gl\\src\\services\\MaintainOperationsClass\\clsMaintainWorkCtr.dll',
-//   assemblyFile: path.join(__dirname, './services/MaintainOperationsClass/clsMaintainWorkCtr.dll'),
-//   // typeName: 'JBMaintainWC',
-//   // nameSpace: 'JBMaintainWC',
-//   typeName: 'JBMaintainWC.MaintainWorkCtr',
-//   methodName: 'SetWorkCenterStatus' // This must be Func<object,Task<object>>
-// });
 
 glDB
   .authenticate()

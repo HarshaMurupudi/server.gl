@@ -1,35 +1,48 @@
-import express, { Request, Response } from 'express';
-import fs from 'fs';
+import express, { Request, Response } from "express";
+import fs from "fs";
 const router = express.Router();
+var querystring = require("querystring");
 
-const { glDB } = require('../config/database');
+const { glDB } = require("../config/database");
 
-router.get('/tracking/:jobID', async (req: Request, res: Response) => {
+router.get("/tracking", async (req: Request, res: Response) => {
   try {
-    const { jobID } = req.params;
+    const sqlQuery =
+      `
+      SELECT pd.Job, pd.Packlist, Tracking_Nbr, Customer, d.Shipped_Date, d.Shipped_Quantity, ph.Ship_Via, ph.Ship_To, d.Invoice_Line, j.Rev
+      FROM [Production].[dbo].Packlist_Detail AS pd
+      LEFT JOIN
+      (SELECT * from [Production].[dbo].[Job]) as j
+      on pd.Job = j.Job
+      LEFT JOIN
+      (SELECT * from [Production].[dbo].Delivery) as d
+      on pd.Packlist = d.Packlist
+      LEFT JOIN
+      (SELECT * from [Production].[dbo].Packlist_Header) as ph
+      on pd.Packlist = ph.Packlist
+      WHERE ` + Object.keys(req.query)[0];
 
     const tracking = await glDB.query(
       `
-      SELECT Job, Packlist, Tracking_Nbr 
-      FROM [Production].[dbo].Packlist_Detail 
-      WHERE Job = :jobID;
+      ${sqlQuery} =:query;
       `,
       {
         replacements: {
-          jobID,
+          query: Object.values(req.query)[0],
         },
         type: glDB.QueryTypes.SELECT,
       }
     );
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       results: tracking.length,
       tracking: tracking,
     });
   } catch (error: any) {
+    console.log(error);
     res.status(400).json({
-      status: 'Error',
+      status: "Error",
       message: error.message,
     });
   }
