@@ -27,6 +27,9 @@ const DeliveryNotes = db.define(
     Job_Plan: {
       type: Sequelize.NUMBER,
     },
+    DeliveryKey: {
+      type: Sequelize.INTEGER,
+    },
   },
   {
     // don't add the timestamp attributes (updatedAt, createdAt)

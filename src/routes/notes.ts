@@ -46,6 +46,7 @@ router.patch("/notes", async (req, res) => {
       Engineering_Notes = null,
       DeliveryKey = null,
     } of jobs) {
+
       const obj = await Note.findOne({
         where: { DeliveryKey, Job },
       });
