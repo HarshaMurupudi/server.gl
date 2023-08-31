@@ -6,6 +6,8 @@ var querystring = require("querystring");
 const { glDB } = require("../config/database");
 
 router.get("/tracking", async (req: Request, res: Response) => {
+
+  const paramneter = Object.keys(req.query)[0] === 'Job' ? 'pd.Job': Object.keys(req.query)[0]
   try {
     const sqlQuery =
       `
@@ -20,7 +22,7 @@ router.get("/tracking", async (req: Request, res: Response) => {
       LEFT JOIN
       (SELECT * from [Production].[dbo].Packlist_Header) as ph
       on pd.Packlist = ph.Packlist
-      WHERE ` + Object.keys(req.query)[0];
+      WHERE ` + paramneter;
 
     const tracking = await glDB.query(
       `
