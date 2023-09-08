@@ -1,8 +1,8 @@
-import Sequelize from 'sequelize';
-const { glDB: db } = require('../config/database');
+import Sequelize from "sequelize";
+const { glDB: db } = require("../config/database");
 
 const Operation = db.define(
-  'Operation',
+  "Operation",
   {
     Job: {
       primaryKey: true,
@@ -17,10 +17,16 @@ const Operation = db.define(
     Sequence: {
       type: Sequelize.INTEGER,
     },
+    Job_Operation: {
+      type: Sequelize.INTEGER,
+    },
     Description: {
       type: Sequelize.STRING,
     },
     Status: {
+      type: Sequelize.STRING,
+    },
+    Note_Text: {
       type: Sequelize.STRING,
     },
   },
@@ -34,7 +40,7 @@ const Operation = db.define(
     // If don't want updatedAt
     updatedAt: false,
 
-    tableName: 'Job_Operation',
+    tableName: "Job_Operation",
   }
 );
 

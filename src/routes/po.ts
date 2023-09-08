@@ -14,7 +14,7 @@ router.get("/po", async (req: Request, res: Response) => {
     Customer_PO, Order_Quantity, Rev, Sched_End, 
     Requested_Date Requested_Date, Promised_Date
     Promised_Date, Promised_Quantity, d.Shipped_Quantity, Remaining_Quantity, Packlist,
-    Lead_Days 
+    Lead_Days, j.Note_Text
     FROM [Production].[dbo].[Job] AS j  
     LEFT JOIN(SELECT Job, Act_Price AS NRE_Charges 
     FROM [Production].[dbo].[Additional_Charge]) AS ac  

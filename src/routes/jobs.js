@@ -59,12 +59,14 @@ router.get("/", async (req, res) => {
           Rev,
           Text5,
           DeliveryKey,
-          Sales_Code
+          Sales_Code,
+          Note_Text
         FROM 
         (
           SELECT DISTINCT 
             (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
             t1.Customer_PO,
+            cast (t1.Note_Text as nvarchar(max)) as Note_Text,
             t3.[Engineering_Notes], 
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
@@ -301,7 +303,7 @@ router.get("/jobsByWorkCenter/:workCenterName", async (req, res) => {
         SELECT *
         FROM (
           SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
-          j.Sched_Start, j.Make_Quantity, jo.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+          j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
           jo.WC_Vendor, jo.Sequence,
           del.Promised_Date,
           Plan_Notes, t3.Priority, t3.Assigned_To,
@@ -357,7 +359,7 @@ router.get("/jobs/open/:workCenterName", async (req, res) => {
       `
         select 
           j.Job, j.Customer, Part_Number, j.Status, j.Description, 
-          j.Sched_Start, j.Make_Quantity, jo.Note_Text,
+          j.Sched_Start, j.Make_Quantity, j.Note_Text,
           j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev,
           jo.WC_Vendor,
           del.Promised_Date,
@@ -424,7 +426,7 @@ router.get("/job-details/:jobID", async (req, res) => {
     const { jobID } = req.params;
     const jobs = await glDB.query(
       `
-      SELECT DISTINCT (t1.Job), Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, 
+      SELECT DISTINCT (t1.Job), Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, t1.Note_Text,
       CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, 
       CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date FROM [Production].[dbo].[Job] AS t1 
       INNER JOIN ( SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL 
@@ -491,7 +493,7 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
         SELECT *
         FROM (
           SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
-          j.Sched_Start, j.Make_Quantity, jo.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+          j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
           jo.WC_Vendor, jo.Sequence,
           del.Promised_Date,
           Plan_Notes, t3.Priority,
@@ -551,7 +553,7 @@ router.get("/print/jobs/open/:workCenterName", async (req, res) => {
       `
         select 
           j.Job, j.Customer, Part_Number, j.Status, j.Description, 
-          j.Sched_Start, j.Make_Quantity, jo.Note_Text,
+          j.Sched_Start, j.Make_Quantity, j.Note_Text,
           j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev,
           jo.WC_Vendor,
           del.Promised_Date,

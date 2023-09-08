@@ -11,7 +11,10 @@ router.get("/tracking", async (req: Request, res: Response) => {
   try {
     const sqlQuery =
       `
-      SELECT pd.Job, pd.Packlist, Tracking_Nbr, Customer, d.Shipped_Date, d.Shipped_Quantity, ph.Ship_Via, ph.Ship_To, d.Invoice_Line, j.Rev
+      SELECT 
+      pd.Job, pd.Packlist, Tracking_Nbr, Customer, d.Shipped_Date, 
+      d.Shipped_Quantity, ph.Ship_Via, ph.Ship_To, d.Invoice_Line, j.Rev,
+      j.Note_Text
       FROM [Production].[dbo].Packlist_Detail AS pd
       LEFT JOIN
       (SELECT * from [Production].[dbo].[Job]) as j

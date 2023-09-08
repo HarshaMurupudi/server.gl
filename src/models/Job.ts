@@ -52,6 +52,9 @@ const Job = db.define(
     Sales_Rep: {
       type: Sequelize.STRING,
     },
+    Note_Text: {
+      type: Sequelize.STRING,
+    },
     Quote: {
       type: Sequelize.STRING,
     },
