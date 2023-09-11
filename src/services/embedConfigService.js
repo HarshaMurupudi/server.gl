@@ -23,7 +23,7 @@ async function getEmbedInfo() {
       status: 200,
     };
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return {
       status: err.status,
       error: `Error while retrieving report embed details\r\n${
@@ -47,7 +47,7 @@ async function getEmbedParamsForSingleReport(
 ) {
   const reportInGroupApi = `https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/reports/${reportId}`;
   const headers = await getRequestHeader();
-//   console.log(headers)
+  //   console.log(headers)
 
   // Get report info by calling the PowerBI REST API
   const result = await fetch(reportInGroupApi, {
@@ -55,18 +55,12 @@ async function getEmbedParamsForSingleReport(
     headers: headers,
   });
 
-  console.log(result, "api data")
-
-//   console.log(result, "result error")
-
   if (!result.ok) {
     throw result;
   }
 
   // Convert result in json to retrieve values
   const resultJson = await result.json();
-
-  console.log(resultJson, "json")
 
   // Add report data for embedding
   const reportDetails = new PowerBiReportDetails(
@@ -97,49 +91,52 @@ async function getEmbedParamsForSingleReport(
   return reportEmbedConfig;
 }
 
-async function getEmbedTokenForSingleReportSingleWorkspace(reportId, datasetIds, targetWorkspaceId) {
+async function getEmbedTokenForSingleReportSingleWorkspace(
+  reportId,
+  datasetIds,
+  targetWorkspaceId
+) {
+  // Add report id in the request
+  let formData = {
+    reports: [
+      {
+        id: reportId,
+      },
+    ],
+  };
 
-    // Add report id in the request
-    let formData = {
-        'reports': [{
-            'id': reportId
-        }]
-    };
-
-    // Add dataset ids in the request
-    formData['datasets'] = [];
-    for (const datasetId of datasetIds) {
-        formData['datasets'].push({
-            'id': datasetId
-        })
-    }
-
-    // Add targetWorkspace id in the request
-    if (targetWorkspaceId) {
-        formData['targetWorkspaces'] = [];
-        formData['targetWorkspaces'].push({
-            'id': targetWorkspaceId
-        })
-    }
-
-    const embedTokenApi = "https://api.powerbi.com/v1.0/myorg/GenerateToken";
-    const headers = await getRequestHeader();
-
-    // Generate Embed token for single report, workspace, and multiple datasets. Refer https://aka.ms/MultiResourceEmbedToken
-    console.log(headers, formData)
-    const result = await fetch(embedTokenApi, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(formData)
+  // Add dataset ids in the request
+  formData["datasets"] = [];
+  for (const datasetId of datasetIds) {
+    formData["datasets"].push({
+      id: datasetId,
     });
+  }
 
-    // console.log(result, "embed token")
-    // const rData = await result.json();
-    // console.log(rData, "embed token")
+  // Add targetWorkspace id in the request
+  if (targetWorkspaceId) {
+    formData["targetWorkspaces"] = [];
+    formData["targetWorkspaces"].push({
+      id: targetWorkspaceId,
+    });
+  }
 
-    if (!result.ok)
-        throw result;
-    return result.json();
+  const embedTokenApi = "https://api.powerbi.com/v1.0/myorg/GenerateToken";
+  const headers = await getRequestHeader();
+
+  // Generate Embed token for single report, workspace, and multiple datasets. Refer https://aka.ms/MultiResourceEmbedToken
+  const result = await fetch(embedTokenApi, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(formData),
+  });
+
+  // console.log(result, "embed token")
+  // const rData = await result.json();
+  // console.log(rData, "embed token")
+
+  if (!result.ok) throw result;
+  return result.json();
 }
 
 /**

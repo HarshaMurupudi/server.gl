@@ -13,10 +13,10 @@ router.get("/part-number/:partID/po", async (req, res) => {
       ? `\\\\gl-fs01\\GLIOrders\\${partID}\\Contracts\\`
       : `//gl-fs01/GLIOrders/${partID}/Contracts/`;
 
-    console.log(fs.readdirSync(filePath));
-
     const allFiles = fs.readdirSync(filePath);
-    const pdf = allFiles.filter((name) => name.includes(".pdf") || name.includes('.doc'));
+    const pdf = allFiles.filter(
+      (name) => name.includes(".pdf") || name.includes(".doc")
+    );
 
     const fileName = pdf;
 

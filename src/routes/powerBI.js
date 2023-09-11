@@ -3,8 +3,8 @@ import fs from "fs";
 const router = express.Router();
 
 const { glDB } = require("../config/database");
-import embedToken from '../services/embedConfigService';
-const utils = require('../utils');
+import embedToken from "../services/embedConfigService";
+const utils = require("../utils");
 
 router.get("/powerBI/getEmbedToken", async (req, res) => {
   try {
@@ -20,8 +20,6 @@ router.get("/powerBI/getEmbedToken", async (req, res) => {
     // Get the details like Embed URL, Access token and Expiry
     let result = await embedToken.getEmbedInfo();
 
-    console.log(result)
-
     // result.status specified the statusCode that will be sent along with the result object
     res.status(result.status).send(result);
 
@@ -31,7 +29,7 @@ router.get("/powerBI/getEmbedToken", async (req, res) => {
     //   tracking: tracking,
     // });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(400).json({
       status: "Error",
       message: error.message,
