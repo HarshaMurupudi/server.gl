@@ -2,7 +2,7 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require("express");
 const cors = require("cors");
 var path = require("path");
-// const dotnet = require('node-api-dotnet');
+// const dotnet = require("node-api-dotnet");
 
 const { glDB } = require("./config/database");
 const jobRoutes = require("./routes/jobs");

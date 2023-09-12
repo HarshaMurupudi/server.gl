@@ -3,19 +3,19 @@ import fs from "fs";
 
 const router = express.Router();
 
-router.get("/part-number/:partID/po", async (req, res) => {
+router.get("/part-number/:jobID/po", async (req, res) => {
   try {
-    const { partID: partValue } = req.params;
-    const partID = partValue.split("_")[0];
+    const { jobID: partValue } = req.params;
+    const jobID = partValue.split("_")[0];
     var isWin = process.platform === "win32";
 
     const filePath = isWin
-      ? `\\\\gl-fs01\\GLIOrders\\${partID}\\Contracts\\`
-      : `//gl-fs01/GLIOrders/${partID}/Contracts/`;
+      ? `\\\\gl-fs01\\GLIOrders\\${jobID}\\Contracts\\`
+      : `//gl-fs01/GLIOrders/${jobID}/Contracts/`;
 
     const allFiles = fs.readdirSync(filePath);
     const pdf = allFiles.filter(
-      (name) => name.includes(".pdf") || name.includes(".doc")
+      (name) => name.includes(".pdf") || name.includes(".doc") || name.includes(".PDF") 
     );
 
     const fileName = pdf;

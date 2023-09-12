@@ -152,8 +152,6 @@ router.get("/part-number/:partID", async (req, res) => {
 
     const fileName = pdf;
 
-    console.log(fileName, filePath);
-
     if (fileName) {
       res.download(filePath + fileName);
     } else {
