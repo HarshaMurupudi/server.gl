@@ -2,7 +2,7 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require("express");
 const cors = require("cors");
 var path = require("path");
-// const dotnet = require("node-api-dotnet");
+// var exec = require("child_process").execFile;
 
 const { glDB } = require("./config/database");
 const jobRoutes = require("./routes/jobs");
@@ -16,6 +16,8 @@ const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 
+const PORT = process.env.PORT;
+
 glDB
   .authenticate()
   .then(() => console.log("DB Authenticated"))
@@ -26,9 +28,20 @@ glDB
     // throw err;
   });
 
-const PORT = process.env.PORT;
-
 const app = express();
+
+// const EXE_PATH = path.join(
+//   __dirname,
+//   "./services/MaintainOperationsClass/ConsoleWCMaintainanceApp.exe"
+// );
+
+// var opt = function () {
+//   exec(EXE_PATH, ["SetRequestedDate", "2023-09-14", "179911"], function (err: any, data: any) {
+//     console.log(err);
+//     console.log(data.toString());
+//   });
+// };
+// opt();
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
