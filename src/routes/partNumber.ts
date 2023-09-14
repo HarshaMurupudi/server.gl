@@ -56,12 +56,7 @@ router.get("/part-number/:jobID/po/:count", async (req, res) => {
         name.includes(".pdf") || name.includes(".doc") || name.includes(".PDF")
     );
 
-    console.log(pdf);
-    console.log(parseInt(count) - 1);
-
     const fileName = pdf[parseInt(count) - 1];
-
-    console.log(filePath + fileName);
 
     if (fileName) {
       res.download(filePath + fileName);
