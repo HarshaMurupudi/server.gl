@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
 import fs from "fs";
 
+const { glDB } = require("../config/database");
+
 const router = express.Router();
 
 router.get("/part-number/:jobID/po/info", async (req, res) => {
@@ -66,6 +68,40 @@ router.get("/part-number/:jobID/po/:count", async (req, res) => {
         message: "No file",
       });
     }
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/inventory/part-number/:partID", async (req, res) => {
+  try {
+    const { partID } = req.params;
+
+    const parts = await glDB.query(
+      `
+      SELECT LOC.Material, Location_ID, Lot, On_Hand_Qty, Description FROM  [Production].[dbo].[Material_Location] AS LOC
+      INNER JOIN 
+      (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
+      ON LOC.Material = MAT.Material
+      WHERE LOC.Material LIKE :partID + '%';
+      `,
+      {
+        replacements: {
+          partID,
+        },
+        type: glDB.QueryTypes.SELECT,
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      result: parts.length,
+      parts: parts,
+    });
   } catch (error: any) {
     console.log(error);
     res.status(400).json({

@@ -424,7 +424,7 @@ router.get("/job-details/:jobID", async (req, res) => {
     const { jobID } = req.params;
     const jobs = await glDB.query(
       `
-      SELECT DISTINCT (t1.Job), Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity, t1.Note_Text,
+      SELECT DISTINCT (t1.Job), Part_Number, t4.On_Hand_Qty, t4.Location_ID, Customer, Status, Description, Order_Quantity, Completed_Quantity,
       CAST(Promised_Date as date) AS Promised_Date, CAST(Requested_Date as date) AS Requested_Date, 
       CAST((Promised_Date - Lead_Days) AS date) AS Ship_By_Date FROM [Production].[dbo].[Job] AS t1 
       INNER JOIN ( SELECT Job, Promised_Date, Requested_Date FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL 
