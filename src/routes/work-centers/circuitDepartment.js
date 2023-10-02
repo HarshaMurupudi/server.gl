@@ -1,0 +1,182 @@
+import express, { Request, Response } from "express";
+
+const router = express.Router();
+const { glDB } = require("../../config/database");
+
+function compare(a, b) {
+  if (a.Sequence < b.Sequence) {
+    return -1;
+  }
+  if (a.Sequence > b.Sequence) {
+    return 1;
+  }
+  return 0;
+}
+
+router.get("/circuit/jobsByWorkCenter/:workCenterName", async (req, res) => {
+  try {
+    const { workCenterName } = req.params;
+
+    const jobs = await glDB.query(
+      `
+            SELECT * FROM [Production].[dbo].[Job_Operation] 
+            WHERE Job IN 
+            (
+              SELECT DISTINCT(Job) FROM [Production].[dbo].[Job] 
+              WHERE Status IN ('Active', 'Hold', 'Complete', 'Pending'
+            ))
+            AND Status in  ('O', 'S')
+            ;
+          `
+    );
+
+    let jobIds = [];
+    let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
+
+    for (const job of setOfJobs) {
+      const jobsWithData = jobs[0].filter((iJob) => {
+        return iJob.Job == job;
+      });
+      // const filteredJobs = jobsWithData.filter(
+      //   (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
+      // );
+      const sortedJobs = jobsWithData.sort(compare);
+      if (sortedJobs[0] && sortedJobs[0]["Work_Center"] == workCenterName) {
+        jobIds.push(job);
+      }
+    }
+    if (jobIds.length > 0) {
+      const fJobs = await glDB.query(
+        `
+          SELECT *
+          FROM (
+            SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
+            j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+            jo.WC_Vendor, jo.Sequence,
+            del.Promised_Date,
+            Plan_Notes, t3.Priority,
+            ROW_NUMBER() OVER (PARTITION BY
+            j.Job ORDER BY j.Sched_Start) AS row_number,
+            jo.Est_Total_Hrs,
+            del.DeliveryKey,
+            jo.Job_OperationKey,
+            j.Lead_Days,
+            j.Customer_PO
+            FROM [dbo].[Job] AS j
+            LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
+            LEFT JOIN 
+                  (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+            LEFT JOIN
+            (SELECT * FROM [General_Label].[dbo].[Circuit_Department_Notes] ) AS t3 
+            ON 
+              jo.Job = t3.Job
+              AND jo.Job_OperationKey = t3.Job_OperationKey
+              AND jo.Work_Center = t3.Work_Center
+              AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+            WHERE j.[Job] IN (:jobIDs) AND jo.Work_Center = :wc
+          ) AS t
+            WHERE t.row_number = 1;
+          `,
+        {
+          replacements: {
+            jobIDs: jobIds,
+            wc: workCenterName,
+          },
+        }
+      );
+      res.status(200).json({
+        status: "success",
+        results: fJobs[0].length,
+        jobs: fJobs[0],
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        results: 0,
+        jobs: [],
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/circuit/jobs/open/:workCenterName", async (req, res) => {
+  try {
+    const { workCenterName } = req.params;
+
+    // const jobs = [await Job.findAll({ limit: 5 })];
+
+    // if()
+
+    const jobs = await glDB.query(
+      `
+          select 
+            j.Job, j.Customer, Part_Number, j.Status, j.Description, 
+            j.Sched_Start, j.Make_Quantity, j.Note_Text,
+            j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev,
+            jo.WC_Vendor,
+            del.Promised_Date,
+            j.Lead_Days,
+            Plan_Notes, t3.Priority,
+            (del.Promised_Date - j.Lead_Days) AS Ship_By_Date,
+            jo.Est_Total_Hrs,
+            del.DeliveryKey,
+            jo.Job_OperationKey,
+            j.Lead_Days,
+            j.Customer_PO
+          from [Production].[dbo].[Job] as j
+          left join
+          (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
+          on j.Job = jo.Job
+          LEFT JOIN 
+          (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+          LEFT JOIN
+          (SELECT * FROM [General_Label].[dbo].[Circuit_Department_Notes]) AS t3 
+          ON 
+            jo.Job = t3.Job 
+            AND jo.Job_OperationKey = t3.Job_OperationKey
+            AND jo.Work_Center = t3.Work_Center
+            AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+          where 
+          j.status in ('Active','Hold', 'Pending', 'Complete') 
+          AND 
+          jo.Work_Center = :wc;
+        `,
+      {
+        replacements: {
+          wc: workCenterName,
+        },
+      }
+    );
+
+    for (const job of jobs[0]) {
+      const jobsWithData = jobs[0].filter((iJob) => {
+        return iJob.Job == job.Job;
+      });
+
+      const sortedJobs = jobsWithData.sort(compare);
+      if (sortedJobs.length > 0) {
+        job["Now At"] = sortedJobs[0]["Work_Center"];
+      }
+    }
+
+    res.status(200).json({
+      status: "success",
+      results: jobs[0].length,
+      jobs: jobs[0],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+module.exports = router;

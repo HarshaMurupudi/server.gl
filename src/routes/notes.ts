@@ -2,9 +2,23 @@ import express, { Request, Response } from "express";
 const router = express.Router();
 
 const Note = require("../models/Notes");
+
 const EngineeringNotes = require("../models/EngineeringNotes");
 const PrintNotes = require("../models/notes/PrintNotes");
+
+const CircuitDepartmentNotes = require("../models/notes/CircuitDepartmentNotes");
+const ConvertingNotes = require("../models/notes/ConvertingNotes");
+const DigitalPrintingNotes = require("../models/notes/DigitalPrintingNotes");
+const FMaterialNotes = require("../models/notes/FMaterialNotes");
+const FinishingNotes = require("../models/notes/FinishingNotes");
+const LamNotes = require("../models/notes/LamNotes");
+const ObsoleteNotes = require("../models/notes/ObsoleteNotes");
+const RoltNotes = require("../models/notes/RoltNotes");
+const ShippingNotes = require("../models/notes/ShippingNotes");
+const InspectionNotes = require("../models/notes/InspectionNotes");
+
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
+
 import { upsert } from "../utils";
 
 // const upsert = async (values, condition) => {
@@ -46,7 +60,6 @@ router.patch("/notes", async (req, res) => {
       Engineering_Notes = null,
       DeliveryKey = null,
     } of jobs) {
-
       const obj = await Note.findOne({
         where: { DeliveryKey, Job },
       });
@@ -177,6 +190,336 @@ router.patch("/jobs/pending/notes", async (req, res) => {
     });
   } catch (error: any) {
     console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/circuit/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(CircuitDepartmentNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/converting/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(ConvertingNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/digital/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(DigitalPrintingNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/material/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(FMaterialNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/finishing/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(FinishingNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/lam/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(LamNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/obsolete/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(ObsoleteNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/rolt/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(RoltNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/shipping/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(ShippingNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/inspection/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Work_Center = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey, Work_Center };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(InspectionNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
 
     res.status(400).json({
       status: "Error",

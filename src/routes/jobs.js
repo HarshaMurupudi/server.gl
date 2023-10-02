@@ -486,52 +486,59 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
       }
     }
 
-    const fJobs = await glDB.query(
-      `
-        SELECT *
-        FROM (
-          SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
-          j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
-          jo.WC_Vendor, jo.Sequence,
-          del.Promised_Date,
-          Plan_Notes, t3.Priority,
-          ROW_NUMBER() OVER (PARTITION BY
-          j.Job ORDER BY j.Sched_Start) AS row_number,
-          jo.Est_Total_Hrs,
-          del.DeliveryKey,
-          jo.Job_OperationKey,
-          j.Lead_Days,
-          j.Customer_PO
-          FROM [dbo].[Job] AS j
-          LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
-          LEFT JOIN 
-			    (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
-          LEFT JOIN
-          (SELECT * FROM [General_Label].[dbo].[Print_Notes] ) AS t3 
-          ON 
-            jo.Job = t3.Job
-            AND jo.Job_OperationKey = t3.Job_OperationKey
-            AND jo.Work_Center = t3.Work_Center
-            AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
-          WHERE j.[Job] IN (:jobIDs) AND jo.Work_Center = :wc
-        ) AS t
-	      WHERE t.row_number = 1;
-        `,
-      {
-        replacements: {
-          jobIDs: jobIds,
-          wc: workCenterName,
-        },
-      }
-    );
+    if (jobIds.length > 0) {
+      const fJobs = await glDB.query(
+        `
+          SELECT *
+          FROM (
+            SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
+            j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+            jo.WC_Vendor, jo.Sequence,
+            del.Promised_Date,
+            Plan_Notes, t3.Priority,
+            ROW_NUMBER() OVER (PARTITION BY
+            j.Job ORDER BY j.Sched_Start) AS row_number,
+            jo.Est_Total_Hrs,
+            del.DeliveryKey,
+            jo.Job_OperationKey,
+            j.Lead_Days,
+            j.Customer_PO
+            FROM [dbo].[Job] AS j
+            LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
+            LEFT JOIN 
+            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+            LEFT JOIN
+            (SELECT * FROM [General_Label].[dbo].[Print_Notes] ) AS t3 
+            ON 
+              jo.Job = t3.Job
+              AND jo.Job_OperationKey = t3.Job_OperationKey
+              AND jo.Work_Center = t3.Work_Center
+              AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+            WHERE j.[Job] IN (:jobIDs) AND jo.Work_Center = :wc
+          ) AS t
+          WHERE t.row_number = 1;
+          `,
+        {
+          replacements: {
+            jobIDs: jobIds,
+            wc: workCenterName,
+          },
+        }
+      );
 
-    res.status(200).json({
-      status: "success",
-      results: fJobs[0].length,
-      jobs: fJobs[0],
-    });
+      res.status(200).json({
+        status: "success",
+        results: fJobs[0].length,
+        jobs: fJobs[0],
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        results: 0,
+        jobs: [],
+      });
+    }
   } catch (error) {
-    console.log(error);
     res.status(400).json({
       status: "Error",
       message: error.message,
@@ -542,10 +549,6 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
 router.get("/print/jobs/open/:workCenterName", async (req, res) => {
   try {
     const { workCenterName } = req.params;
-
-    // const jobs = [await Job.findAll({ limit: 5 })];
-
-    // if()
 
     const jobs = await glDB.query(
       `

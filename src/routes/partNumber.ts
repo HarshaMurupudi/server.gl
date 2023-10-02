@@ -52,7 +52,6 @@ router.get("/part-number/:jobID/po/:count", async (req, res) => {
       : `//gl-fs01/GLIOrders/${jobID}/Contracts/`;
 
     const allFiles = fs.readdirSync(filePath);
-    console.log(allFiles);
     const pdf = allFiles.filter(
       (name) =>
         name.includes(".pdf") || name.includes(".doc") || name.includes(".PDF")
@@ -83,10 +82,14 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
 
     const parts = await glDB.query(
       `
-      SELECT LOC.Material, Location_ID, Lot, On_Hand_Qty, Description FROM  [Production].[dbo].[Material_Location] AS LOC
-      INNER JOIN 
+      SELECT 
+      LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM  [Production].[dbo].[Material_Location] AS LOC
+      INNER JOIN
       (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
       ON LOC.Material = MAT.Material
+      LEFT JOIN
+      (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
+      ON LOC.Material = mr.Material
       WHERE LOC.Material LIKE :partID + '%';
       `,
       {

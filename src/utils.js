@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 // ----------------------------------------------------------------------------
-import { validate as uuidValidate } from 'uuid';
+import { validate as uuidValidate } from "uuid";
 
 function getAuthHeader(accessToken) {
   // Function to append Bearer against the Access Token
@@ -91,9 +91,19 @@ const upsert = async (model, condition, values) => {
   return model.create({ ...condition, ...values });
 };
 
+const returnIfNoJobs = (jobIds, res) => {
+  if (!jobIds.length > 0) {
+    res.status(200).json({
+      status: "success",
+      results: 0,
+      jobs: [],
+    });
+  }
+};
 
 module.exports = {
   getAuthHeader: getAuthHeader,
   validateConfig: validateConfig,
   upsert,
+  returnIfNoJobs,
 };
