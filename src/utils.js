@@ -4,6 +4,8 @@
 // ----------------------------------------------------------------------------
 import { validate as uuidValidate } from "uuid";
 
+const today = new Date();
+
 function getAuthHeader(accessToken) {
   // Function to append Bearer against the Access Token
   return "Bearer ".concat(accessToken);
@@ -101,9 +103,38 @@ const returnIfNoJobs = (jobIds, res) => {
   }
 };
 
+const getNextDate = (collection, key) => {
+  collection.sort(function (a, b) {
+    var distancea = Math.abs(today - new Date(a[key]));
+    var distanceb = Math.abs(today - new Date(b[key]));
+    return distancea - distanceb; // sort a before b when the distance is smaller
+  });
+
+  const afterdates = collection.filter(function (d) {
+    return new Date(d[key]) - today > 0;
+  });
+
+  var beforedates = collection.filter(function (d) {
+    return new Date(d[key]) - today < 0;
+  });
+
+  var currentdate = collection.filter(function (d) {
+    return new Date(d[key]) - today == 0;
+  });
+
+  if (currentdate.length > 0) {
+    return currentdate[0];
+  } else if (!afterdates.length > 0) {
+    return beforedates[0];
+  } else {
+    return afterdates[0];
+  }
+};
+
 module.exports = {
   getAuthHeader: getAuthHeader,
   validateConfig: validateConfig,
   upsert,
   returnIfNoJobs,
+  getNextDate,
 };

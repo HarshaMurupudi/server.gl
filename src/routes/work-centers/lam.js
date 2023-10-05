@@ -1,8 +1,9 @@
 import express, { Request, Response } from "express";
 
-const router = express.Router();
+import { getNextDate } from "../../utils";
 const { glDB } = require("../../config/database");
 
+const router = express.Router();
 function compare(a, b) {
   if (a.Sequence < b.Sequence) {
     return -1;
@@ -63,7 +64,7 @@ router.get("/lam/jobsByWorkCenter/:workCenterName", async (req, res) => {
             del.DeliveryKey,
             jo.Job_OperationKey,
             j.Lead_Days,
-            j.Customer_PO
+            j.Customer_PO, j.Top_Lvl_Job
             FROM [dbo].[Job] AS j
             LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
             LEFT JOIN 
@@ -87,6 +88,28 @@ router.get("/lam/jobsByWorkCenter/:workCenterName", async (req, res) => {
             }
           )
         : [[]];
+
+    for (const job of fJobs[0]) {
+      if (!job["Promised_Date"]) {
+        const rootJobDel = await glDB.query(
+          `
+                  SELECT * FROM [Production].[dbo].[Delivery] 
+                  WHERE Job= :jobID
+                `,
+          {
+            replacements: {
+              jobID: job.Top_Lvl_Job,
+            },
+          }
+        );
+
+        if (rootJobDel[0].length > 0) {
+          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
+            "Promised_Date"
+          ];
+        }
+      }
+    }
 
     res.status(200).json({
       status: "success",
@@ -125,7 +148,7 @@ router.get("/lam/jobs/open/:workCenterName", async (req, res) => {
             del.DeliveryKey,
             jo.Job_OperationKey,
             j.Lead_Days,
-            j.Customer_PO
+            j.Customer_PO, j.Top_Lvl_Job
           from [Production].[dbo].[Job] as j
           left join
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
@@ -159,6 +182,26 @@ router.get("/lam/jobs/open/:workCenterName", async (req, res) => {
       const sortedJobs = jobsWithData.sort(compare);
       if (sortedJobs.length > 0) {
         job["Now At"] = sortedJobs[0]["Work_Center"];
+      }
+
+      if (!job["Promised_Date"]) {
+        const rootJobDel = await glDB.query(
+          `
+              SELECT * FROM [Production].[dbo].[Delivery] 
+              WHERE Job= :jobID
+            `,
+          {
+            replacements: {
+              jobID: job.Top_Lvl_Job,
+            },
+          }
+        );
+
+        if (rootJobDel[0].length > 0) {
+          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
+            "Promised_Date"
+          ];
+        }
       }
     }
 

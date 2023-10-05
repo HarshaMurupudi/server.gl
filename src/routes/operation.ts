@@ -2,9 +2,11 @@ import express, { Request, Response } from "express";
 import fs from "fs";
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
+
 const Operation = require("../models/Operation");
 const router = express.Router();
 const { glDB } = require("../config/database");
+const Job = require("../models/Job");
 
 router.get("/operations/:jobID", async (req: Request, res: Response) => {
   try {
@@ -12,6 +14,14 @@ router.get("/operations/:jobID", async (req: Request, res: Response) => {
 
     const operations = await Operation.findAll({
       where: { Job: { [Op.like]: "%" + jobID + "%" } },
+      include: [
+        {
+          model: Job,
+          as: "job",
+          required: false,
+          attributes: { include: ["Description"] },
+        },
+      ],
       order: [["Sequence", "ASC"]],
     });
 
@@ -32,6 +42,7 @@ router.get("/operations/:jobID", async (req: Request, res: Response) => {
       // operations: operations,
     });
   } catch (error: any) {
+    console.log(error);
     res.status(400).json({
       status: "Error",
       message: error.message,

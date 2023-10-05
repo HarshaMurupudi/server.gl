@@ -27,6 +27,8 @@ const lamJobs = require("./routes/work-centers/lam");
 const obsoleteJobs = require("./routes/work-centers/obsolete");
 const roltJobs = require("./routes/work-centers/rolt");
 const shippingJobs = require("./routes/work-centers/shipping");
+const engineeringJobs = require("./routes/work-centers/engineering");
+const printJobs = require("./routes/work-centers/print");
 
 const PORT = process.env.PORT;
 
@@ -79,6 +81,8 @@ app.use(lamJobs);
 app.use(obsoleteJobs);
 app.use(roltJobs);
 app.use(shippingJobs);
+app.use(engineeringJobs);
+app.use(printJobs);
 
 app.listen(PORT, () => {
   console.log(`Sever is up and listening on port ${PORT}`);

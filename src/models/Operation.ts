@@ -1,5 +1,7 @@
 import Sequelize from "sequelize";
+
 const { glDB: db } = require("../config/database");
+const Job = require("./Job");
 
 const Operation = db.define(
   "Operation",
@@ -43,5 +45,10 @@ const Operation = db.define(
     tableName: "Job_Operation",
   }
 );
+
+Operation.belongsTo(Job, {
+  foreignKey: "Job",
+  as: "job", // Appropriate name
+});
 
 module.exports = Operation;

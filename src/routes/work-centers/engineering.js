@@ -1,7 +1,9 @@
 import express, { Request, Response } from "express";
 
-const router = express.Router();
+import { getNextDate } from "../../utils";
 const { glDB } = require("../../config/database");
+
+const router = express.Router();
 
 function compare(a, b) {
   if (a.Sequence < b.Sequence) {
@@ -13,7 +15,7 @@ function compare(a, b) {
   return 0;
 }
 
-router.get("/digital/jobsByWorkCenter/:workCenterName", async (req, res) => {
+router.get("/jobsByWorkCenter/:workCenterName", async (req, res) => {
   try {
     const { workCenterName } = req.params;
 
@@ -37,26 +39,21 @@ router.get("/digital/jobsByWorkCenter/:workCenterName", async (req, res) => {
       const jobsWithData = jobs[0].filter((iJob) => {
         return iJob.Job == job;
       });
-      // const filteredJobs = jobsWithData.filter(
-      //   (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
-      // );
       const sortedJobs = jobsWithData.sort(compare);
       if (sortedJobs[0] && sortedJobs[0]["Work_Center"] == workCenterName) {
         jobIds.push(job);
       }
     }
 
-    const fJobs =
-      jobIds.length > 0
-        ? await glDB.query(
-            `
+    const fJobs = await glDB.query(
+      `
           SELECT *
           FROM (
             SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
             j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
             jo.WC_Vendor, jo.Sequence,
             del.Promised_Date,
-            Plan_Notes, t3.Priority,
+            Plan_Notes, t3.Priority, t3.Assigned_To,
             ROW_NUMBER() OVER (PARTITION BY
             j.Job ORDER BY j.Sched_Start) AS row_number,
             jo.Est_Total_Hrs,
@@ -69,7 +66,7 @@ router.get("/digital/jobsByWorkCenter/:workCenterName", async (req, res) => {
             LEFT JOIN 
                   (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
             LEFT JOIN
-            (SELECT * FROM [General_Label].[dbo].[Digital_Printing_Notes] ) AS t3 
+            (SELECT * FROM [General_Label].[dbo].[Engineering_Notes] ) AS t3 
             ON 
               jo.Job = t3.Job
               AND jo.Job_OperationKey = t3.Job_OperationKey
@@ -79,22 +76,21 @@ router.get("/digital/jobsByWorkCenter/:workCenterName", async (req, res) => {
           ) AS t
             WHERE t.row_number = 1;
           `,
-            {
-              replacements: {
-                jobIDs: jobIds,
-                wc: workCenterName,
-              },
-            }
-          )
-        : [[]];
+      {
+        replacements: {
+          jobIDs: jobIds,
+          wc: workCenterName,
+        },
+      }
+    );
 
     for (const job of fJobs[0]) {
       if (!job["Promised_Date"]) {
         const rootJobDel = await glDB.query(
           `
-                  SELECT * FROM [Production].[dbo].[Delivery] 
-                  WHERE Job= :jobID
-                `,
+                SELECT * FROM [Production].[dbo].[Delivery] 
+                WHERE Job= :jobID
+              `,
           {
             replacements: {
               jobID: job.Top_Lvl_Job,
@@ -124,13 +120,9 @@ router.get("/digital/jobsByWorkCenter/:workCenterName", async (req, res) => {
   }
 });
 
-router.get("/digital/jobs/open/:workCenterName", async (req, res) => {
+router.get("/jobs/open/:workCenterName", async (req, res) => {
   try {
     const { workCenterName } = req.params;
-
-    // const jobs = [await Job.findAll({ limit: 5 })];
-
-    // if()
 
     const jobs = await glDB.query(
       `
@@ -141,7 +133,7 @@ router.get("/digital/jobs/open/:workCenterName", async (req, res) => {
             jo.WC_Vendor,
             del.Promised_Date,
             j.Lead_Days,
-            Plan_Notes, t3.Priority,
+            Plan_Notes, t3.Priority, t3.Assigned_To,
             (del.Promised_Date - j.Lead_Days) AS Ship_By_Date,
             jo.Est_Total_Hrs,
             del.DeliveryKey,
@@ -155,9 +147,9 @@ router.get("/digital/jobs/open/:workCenterName", async (req, res) => {
           LEFT JOIN 
           (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
           LEFT JOIN
-          (SELECT * FROM [General_Label].[dbo].[Digital_Printing_Notes]) AS t3 
+          (SELECT * FROM [General_Label].[dbo].[Engineering_Notes] ) AS t3 
           ON 
-            jo.Job = t3.Job 
+            jo.Job = t3.Job
             AND jo.Job_OperationKey = t3.Job_OperationKey
             AND jo.Work_Center = t3.Work_Center
             AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
