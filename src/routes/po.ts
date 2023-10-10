@@ -56,14 +56,14 @@ router.get("/po-details/:jobID", async (req: Request, res: Response) => {
     const po = await glDB.query(
       `
       SELECT
-        j.Customer, c.Contact_Name AS 'Contact Name',
-        CONCAT( a.Name, '/', a.Line1, '/', a.Line2, '/', a.City, ',', a.State, ' ', a.Zip, '/', a.Country ) AS Address,
-        ph.Ship_Via AS 'Ship Method', 
-        j.Lead_Days AS 'Lead Days', Customer_PO AS 'Customer PO', j.Job, Part_Number AS 'Part Number', Rev, j.Status,
-        Order_Quantity AS 'Order Quantity',
-        Requested_Date AS 'Requested Date', Promised_Date AS 'Promised Date',
-        Promised_Quantity AS 'Promised Quantity',
-        '0' AS 'Price'
+        j.Customer, c.Contact_Name,
+        a.Name, a.Line1, a.Line2, a.City, a.State, a.Zip, a.Country,
+        ph.Ship_Via, 
+        j.Lead_Days, Customer_PO, j.Job, Part_Number, Rev, j.Status,
+        Order_Quantity,
+        Requested_Date, Promised_Date,
+        Promised_Quantity,
+        j.Unit_Price
       FROM [Production].[dbo].[Job] AS j
       LEFT JOIN
       (SELECT * from [Production].[dbo].[Packlist_Detail]) as pd
