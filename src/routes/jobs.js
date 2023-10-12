@@ -86,7 +86,7 @@ router.get("/", async (req, res) => {
               ON t1.Job = t3.Job 
               AND (t2.DeliveryKey = t3.DeliveryKey
               OR (t2.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
-            WHERE Status IN ('Active', 'Complete', 'Hold', 'Pending')
+            WHERE Status IN ('Active', 'Complete')
             ) a
         WHERE Ship_By_Date between :startDate and :endDate
         ORDER BY Ship_By_Date;
