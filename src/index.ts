@@ -29,6 +29,8 @@ const shippingJobs = require("./routes/work-centers/shipping");
 const engineeringJobs = require("./routes/work-centers/engineering");
 const printJobs = require("./routes/work-centers/print");
 
+const materialRequirements = require("./routes/materialRequirement");
+
 const PORT = process.env.PORT;
 
 glDB
@@ -56,6 +58,7 @@ app.use(powerBI);
 app.use(partNumber);
 app.use(operationTime);
 app.use(jobBoss);
+app.use(materialRequirements);
 
 // WC
 app.use(circuitDepJobs);
