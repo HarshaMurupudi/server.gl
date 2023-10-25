@@ -29,7 +29,14 @@ router.get("/material/requirements/:jobID", async (req, res) => {
     // push to object
 
     for (let job of jobs) {
-      const { Material: material } = job;
+      const {
+        Material: material,
+        Type: type,
+        Description: description,
+        Est_Unit_Cost: estUnitCost,
+        Lead_Days: leadDays,
+        Material_Req: materialReq,
+      } = job;
 
       const jobs = await glDB.query(
         `
@@ -49,9 +56,42 @@ router.get("/material/requirements/:jobID", async (req, res) => {
         }
       );
 
-      if (jobs.length > 0) {
-        materialsWithJobs[material] = jobs;
-      }
+      const onHandMaterialData = await glDB.query(
+        `
+        SELECT 
+        Location_ID, Lot, On_Hand_Qty FROM [Production].[dbo].[Material_Location] AS LOC
+        WHERE LOC.Material = :material;
+        `,
+        {
+          replacements: {
+            material,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      const onOrderMaterialData = await glDB.query(
+        `
+        SELECT 
+        * FROM [Production].[dbo].[Source]
+        WHERE Material_Req = :materialReq;
+        `,
+        {
+          replacements: {
+            materialReq,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      materialsWithJobs[material] = {};
+      materialsWithJobs[material].jobs = jobs || [];
+      materialsWithJobs[material].type = type;
+      materialsWithJobs[material].description = description;
+      materialsWithJobs[material].estUnitCost = estUnitCost;
+      materialsWithJobs[material].leadDays = leadDays;
+      materialsWithJobs[material].onHandMaterial = onHandMaterialData;
+      materialsWithJobs[material].onOrderMaterial = onOrderMaterialData;
     }
 
     res.status(200).json({
