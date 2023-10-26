@@ -29,6 +29,9 @@ const shippingJobs = require("./routes/work-centers/shipping");
 const engineeringJobs = require("./routes/work-centers/engineering");
 const printJobs = require("./routes/work-centers/print");
 
+// WC_Vendor
+const vendorJobs = require("./routes/work-centers/vendor");
+
 const PORT = process.env.PORT;
 
 glDB
@@ -69,6 +72,7 @@ app.use(obsoleteJobs);
 app.use(roltJobs);
 app.use(shippingJobs);
 app.use(engineeringJobs);
+app.use(vendorJobs);
 app.use(printJobs);
 
 app.listen(PORT, () => {
