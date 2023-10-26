@@ -70,7 +70,7 @@ router.patch("/notes", async (req, res) => {
       if (obj) {
         obj.update({
           Production_Notes,
-          EngineeringNotes,
+          Engineering_Notes,
           Plan_Notes,
           Assigned_To,
           Sales_Notes,
@@ -81,7 +81,7 @@ router.patch("/notes", async (req, res) => {
           Job,
           DeliveryKey,
           Production_Notes,
-          EngineeringNotes,
+          Engineering_Notes,
           Plan_Notes,
           Assigned_To,
           Sales_Notes,
