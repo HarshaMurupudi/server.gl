@@ -63,12 +63,13 @@ router.get("/", async (req, res) => {
           Note_Text,
           Unit_Price,
           Ship_Via,
-          Shipped_Quantity
+          Shipped_Quantity,
+          Quote
         FROM 
         (
           SELECT DISTINCT 
             (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
-            t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity,
+            t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
             t3.[Engineering_Notes], 
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
