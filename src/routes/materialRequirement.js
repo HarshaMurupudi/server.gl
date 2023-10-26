@@ -73,7 +73,11 @@ router.get("/material/requirements/:jobID", async (req, res) => {
       const onOrderMaterialData = await glDB.query(
         `
         SELECT 
-        * FROM [Production].[dbo].[Source]
+        * FROM [Production].[dbo].[Source] AS src
+	      LEFT JOIN
+	      [Production].[dbo].[PO_Detail] AS detail ON src.PO_Detail = detail.PO_Detail
+	      LEFT JOIN
+	      [Production].[dbo].[PO_Header] AS header ON detail.PO = header.PO
         WHERE Material_Req = :materialReq;
         `,
         {
