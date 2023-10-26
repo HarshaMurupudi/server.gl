@@ -55,8 +55,10 @@ router.patch("/notes", async (req, res) => {
     for (const {
       Job,
       Ship_By_Date = null,
+      Production_Notes = null,
       Sales_Notes = null,
       Job_Plan = null,
+      Engineering_Notes = null,
       Plan_Notes = null,
       Assigned_To = null,
       DeliveryKey = null,
@@ -67,6 +69,8 @@ router.patch("/notes", async (req, res) => {
 
       if (obj) {
         obj.update({
+          Production_Notes,
+          EngineeringNotes,
           Plan_Notes,
           Assigned_To,
           Sales_Notes,
@@ -76,6 +80,8 @@ router.patch("/notes", async (req, res) => {
         Note.create({
           Job,
           DeliveryKey,
+          Production_Notes,
+          EngineeringNotes,
           Plan_Notes,
           Assigned_To,
           Sales_Notes,
