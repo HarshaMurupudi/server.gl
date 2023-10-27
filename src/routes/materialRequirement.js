@@ -25,13 +25,17 @@ router.get("/material/requirements/:jobID", async (req, res) => {
     );
 
     const materialsWithJobs = {};
-    // for material get all jobs
-    // push to object
-
     for (let job of jobs) {
-      const { Material: material } = job;
+      const {
+        Material: material,
+        Type: type,
+        Description: description,
+        Est_Unit_Cost: estUnitCost,
+        Lead_Days: leadDays,
+        Material_Req: materialReq,
+      } = job;
 
-      const jobs = await glDB.query(
+      const materailJobs = await glDB.query(
         `
             SELECT *
             FROM 
@@ -49,8 +53,74 @@ router.get("/material/requirements/:jobID", async (req, res) => {
         }
       );
 
-      if (jobs.length > 0) {
-        materialsWithJobs[material] = jobs;
+      const onHandMaterialData = await glDB.query(
+        `
+        SELECT 
+        Location_ID, Lot, On_Hand_Qty FROM [Production].[dbo].[Material_Location] AS LOC
+        WHERE LOC.Material = :material;
+        `,
+        {
+          replacements: {
+            material,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      const onOrderMaterialData = await glDB.query(
+        `
+        SELECT 
+        * FROM [Production].[dbo].[Source] AS src
+	      LEFT JOIN
+	      [Production].[dbo].[PO_Detail] AS detail ON src.PO_Detail = detail.PO_Detail
+	      LEFT JOIN
+	      [Production].[dbo].[PO_Header] AS header ON detail.PO = header.PO
+        WHERE Material_Req = :materialReq;
+        `,
+        {
+          replacements: {
+            materialReq,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      materialsWithJobs[material] = {};
+      materialsWithJobs[material].jobs = materailJobs || [];
+      materialsWithJobs[material].type = type;
+      materialsWithJobs[material].description = description;
+      materialsWithJobs[material].estUnitCost = estUnitCost;
+      materialsWithJobs[material].leadDays = leadDays;
+      materialsWithJobs[material].onHandMaterial = onHandMaterialData;
+      materialsWithJobs[material].onOrderMaterial = onOrderMaterialData;
+
+      const total = onHandMaterialData.reduce((total, item) => {
+        total += item.On_Hand_Qty;
+        return total;
+      }, 0);
+      let tempCount = total;
+
+      for (let materialJob of materailJobs) {
+        const { Est_Qty } = materialJob;
+        tempCount -= Est_Qty;
+        let allocation = "";
+        let risk = "None";
+
+        if (tempCount >= 0) {
+          allocation = `${Est_Qty} from current inventory`;
+        } else {
+          if (Est_Qty + tempCount > 0) {
+            risk = "Critical";
+            allocation = `${Est_Qty + tempCount} from inventory & ${Math.abs(
+              tempCount
+            )} required`;
+          } else {
+            risk = "Critical";
+            allocation = `${Est_Qty} required`;
+          }
+        }
+        materialJob.allocation = allocation;
+        materialJob.risk = risk;
       }
     }
 
@@ -68,14 +138,38 @@ router.get("/material/requirements/:jobID", async (req, res) => {
   }
 });
 
+router.get("/job/material/requirements/:jobID", async (req, res) => {
+  const { jobID } = req.params;
+
+  try {
+    const jobs = await glDB.query(
+      `
+        SELECT *
+        FROM 
+            [Production].[dbo].[Material_Req]
+        WHERE 
+            Job =:jobID
+        `,
+      {
+        replacements: {
+          jobID,
+        },
+        type: glDB.QueryTypes.SELECT,
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      results: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
 module.exports = router;
-
-// SELECT *
-//   FROM [Production].[dbo].[Material_Req]
-//  WHERE Job ='176269'
-
-// SELECT *
-// FROM
-//     [Production].[dbo].[Material_Req]
-// WHERE
-//     Material = '3M 9653LE 2.25 X 360 YDS' AND (Status = 'O' OR Status = 'S');
