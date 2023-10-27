@@ -11,6 +11,7 @@ const ConvertingNotes = require("../models/notes/ConvertingNotes");
 const DigitalPrintingNotes = require("../models/notes/DigitalPrintingNotes");
 const FMaterialNotes = require("../models/notes/FMaterialNotes");
 const FinishingNotes = require("../models/notes/FinishingNotes");
+const VendorNotes = require("../models/notes/VendorNotes");
 const LamNotes = require("../models/notes/LamNotes");
 const ObsoleteNotes = require("../models/notes/ObsoleteNotes");
 const RoltNotes = require("../models/notes/RoltNotes");
@@ -58,6 +59,8 @@ router.patch("/notes", async (req, res) => {
       Sales_Notes = null,
       Job_Plan = null,
       Engineering_Notes = null,
+      Plan_Notes = null,
+      Assigned_To = null,
       DeliveryKey = null,
     } of jobs) {
       const obj = await Note.findOne({
@@ -68,6 +71,8 @@ router.patch("/notes", async (req, res) => {
         obj.update({
           Production_Notes,
           Engineering_Notes,
+          Plan_Notes,
+          Assigned_To,
           Sales_Notes,
           Job_Plan,
         });
@@ -77,6 +82,8 @@ router.patch("/notes", async (req, res) => {
           DeliveryKey,
           Production_Notes,
           Engineering_Notes,
+          Plan_Notes,
+          Assigned_To,
           Sales_Notes,
           Job_Plan,
         });
@@ -157,6 +164,37 @@ router.patch("/print/notes", async (req, res) => {
     });
   } catch (error: any) {
     console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/vendor/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Plan_Notes = null,
+      Job_OperationKey = null,
+      Priority = null,
+    } of jobs) {
+      const condition = { Job, DeliveryKey, Job_OperationKey };
+      const values = { Plan_Notes, Priority };
+
+      await upsert(VendorNotes, condition, values);
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
 
     res.status(400).json({
       status: "Error",

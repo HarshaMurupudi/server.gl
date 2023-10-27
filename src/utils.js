@@ -83,7 +83,7 @@ function validateConfig() {
   }
 }
 
-const upsert = async (model, condition, values) => {
+export const upsert = async (model, condition, values) => {
   const obj = await model.findOne({
     where: condition,
   });
