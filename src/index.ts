@@ -31,6 +31,8 @@ const printJobs = require("./routes/work-centers/print");
 
 // WC_Vendor
 const vendorJobs = require("./routes/work-centers/vendor");
+const materialRequirements = require("./routes/materialRequirement");
+
 
 const PORT = process.env.PORT;
 
@@ -59,6 +61,7 @@ app.use(powerBI);
 app.use(partNumber);
 app.use(operationTime);
 app.use(jobBoss);
+app.use(materialRequirements);
 
 // WC
 app.use(circuitDepJobs);

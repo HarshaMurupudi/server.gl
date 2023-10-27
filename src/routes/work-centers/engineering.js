@@ -50,7 +50,7 @@ router.get("/jobsByWorkCenter/:workCenterName", async (req, res) => {
           SELECT *
           FROM (
             SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
-            j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+            j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev, j.Quote,
             jo.WC_Vendor, jo.Sequence,
             del.Promised_Date,
             Plan_Notes, t3.Priority, t3.Assigned_To,
@@ -129,7 +129,7 @@ router.get("/jobs/open/:workCenterName", async (req, res) => {
           select 
             j.Job, j.Customer, Part_Number, j.Status, j.Description, 
             j.Sched_Start, j.Make_Quantity, j.Note_Text,
-            j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev,
+            j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev, j.Quote,
             jo.WC_Vendor,
             del.Promised_Date,
             j.Lead_Days,
