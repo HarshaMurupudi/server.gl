@@ -139,7 +139,7 @@ router.get("/", async (req, res) => {
       jobs: jobs[0],
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(400).json({
       status: "Error",
       message: error.message,
@@ -182,6 +182,7 @@ router.get("/part-number/:partID", async (req, res) => {
     res.status(400).json({
       status: "Error",
       message: error.message,
+      code: error.code,
     });
   }
 });
@@ -213,6 +214,7 @@ router.get("/job-image/:jobID", async (req, res) => {
     res.status(400).json({
       status: "Error",
       message: error.message,
+      code: error.code,
     });
   }
 });
