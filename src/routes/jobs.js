@@ -342,4 +342,121 @@ router.get("/jobs/search", async (req, res) => {
   }
 });
 
+router.get("/delivery/shiplines", async (req, res) => {
+  try {
+    // const jobs = [await Job.findAll({ limit: 50 })];
+
+    const { job } = req.query;
+
+
+    const jobs = await glDB.query(
+      `
+        SELECT 
+          Job,
+          Production_Notes,
+          Sales_Notes,
+          Engineering_Notes,
+          Job_Plan,
+          Customer_PO,
+          Part_Number,
+          Customer,
+          Status, 
+          Description,
+          Order_Quantity,
+          Promised_Quantity,
+          Completed_Quantity,
+          Promised_Date,
+          Requested_Date,
+          Ship_By_Date,
+          Lead_Days,
+          Rev,
+          Text5,
+          DeliveryKey,
+          Sales_Code,
+          Note_Text,
+          Unit_Price,
+          Ship_Via,
+          Shipped_Quantity,
+          Quote
+        FROM 
+        (
+          SELECT DISTINCT 
+            (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
+            t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
+            cast (t1.Note_Text as nvarchar(max)) as Note_Text,
+            t3.[Engineering_Notes], 
+            t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
+            Completed_Quantity, Promised_Date, t1.Sales_Code,
+            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
+          FROM [Production].[dbo].[Job] AS t1           
+            INNER JOIN 
+            (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
+              WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
+            LEFT JOIN
+            (SELECT Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
+              ON t1.User_Values = u.U_User_Values
+            LEFT JOIN
+            (SELECT * FROM [General_Label].[dbo].[Delivery_Notes] ) AS t3 
+              ON t1.Job = t3.Job 
+              AND (t2.DeliveryKey = t3.DeliveryKey
+              OR (t2.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+            WHERE Status IN ('Active', 'Complete')
+            ) a
+        WHERE Job= :job
+        ORDER BY Ship_By_Date;
+      `,
+      {
+        replacements: {
+          job
+        },
+      }
+    );
+
+    let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
+    const fJobs = await Operation.findAll({
+      where: {
+        Job: setOfJobs,
+      },
+    });
+
+    for (const job of jobs[0]) {
+      const jobsWithData = fJobs.filter((iJob) => {
+        return iJob.Job == job.Job;
+      });
+
+      const filteredJobs = jobsWithData.filter(
+        (fJob) => fJob.Status === "S" || fJob.Status === "O"
+      );
+
+      const filteredCompletedJobs = jobsWithData.filter(
+        (fJob) => fJob.Status === "C"
+      );
+
+      const sortedCompletedJobs = filteredCompletedJobs.sort(compare);
+      const sortedJobs = filteredJobs.sort(compare);
+
+      if (sortedJobs.length > 0) {
+        job["Now At"] = sortedJobs[0]["Work_Center"];
+      }
+
+      if (job["Status"] === "Complete" && sortedCompletedJobs.length > 0) {
+        job["Now At"] =
+          sortedCompletedJobs[sortedCompletedJobs.length - 1]["Work_Center"];
+      }
+    }
+
+    res.status(200).json({
+      status: "success",
+      results: jobs[0].length,
+      jobs: jobs[0],
+    });
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
 module.exports = router;
