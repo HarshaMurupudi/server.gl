@@ -392,8 +392,8 @@ router.get("/delivery/shiplines", async (req, res) => {
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
-            (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
-              WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
+            (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]) 
+            AS t2 ON t1.Job = t2.Job
             LEFT JOIN
             (SELECT Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
               ON t1.User_Values = u.U_User_Values
