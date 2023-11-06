@@ -64,7 +64,8 @@ router.get("/jobsByVendor/:vendorName", async (req, res) => {
             FROM [dbo].[Job] AS j
             LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
             LEFT JOIN 
-                  (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+                  (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+                  AS del ON j.Job = del.Job
             LEFT JOIN
             (SELECT * FROM [General_Label].[dbo].[Vendor_Notes] ) AS t3 
             ON 
@@ -143,7 +144,8 @@ router.get("/vendor/open/:vendorName", async (req, res) => {
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
           on j.Job = jo.Job
           LEFT JOIN 
-            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+            AS del ON j.Job = del.Job
           LEFT JOIN
           (SELECT * FROM [General_Label].[dbo].[Vendor_Notes] ) AS t3 
           ON 
