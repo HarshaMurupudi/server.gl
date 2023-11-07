@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 
 import { getNextDate } from "../../utils";
+const Operation = require("../../models/Operation");
 const { glDB } = require("../../config/database");
 
 const router = express.Router();
@@ -177,12 +178,22 @@ router.get("/finishing/jobs/open/:workCenterName", async (req, res) => {
       }
     );
 
+    let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
+    const fJobs = await Operation.findAll({
+      where: {
+        Job: setOfJobs,
+      },
+    });
+
     for (const job of jobs[0]) {
-      const jobsWithData = jobs[0].filter((iJob) => {
+      const jobsWithData = fJobs.filter((iJob) => {
         return iJob.Job == job.Job;
       });
+      const filteredJobs = jobsWithData.filter(
+        (fJob) => fJob.Status === "S" || fJob.Status === "O"
+      );
+      const sortedJobs = filteredJobs.sort(compare);
 
-      const sortedJobs = jobsWithData.sort(compare);
       if (sortedJobs.length > 0) {
         job["Now At"] = sortedJobs[0]["Work_Center"];
       }
