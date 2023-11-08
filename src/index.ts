@@ -33,6 +33,9 @@ const printJobs = require("./routes/work-centers/print");
 const vendorJobs = require("./routes/work-centers/vendor");
 const materialRequirements = require("./routes/materialRequirement");
 
+// Meetings
+const prodMeeting = require("./routes/meeting");
+
 
 const PORT = process.env.PORT;
 
@@ -77,6 +80,8 @@ app.use(shippingJobs);
 app.use(engineeringJobs);
 app.use(vendorJobs);
 app.use(printJobs);
+
+app.use(prodMeeting);
 
 app.listen(PORT, () => {
   console.log(`Sever is up and listening on port ${PORT}`);

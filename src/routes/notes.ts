@@ -19,6 +19,7 @@ const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
+const MeetingNotes = require("../models/notes/MeetingNotes");
 
 import { upsert } from "../utils";
 
@@ -164,6 +165,48 @@ router.patch("/print/notes", async (req, res) => {
     });
   } catch (error: any) {
     console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/meeting/notes", async (req, res) => {
+  try {
+    const {
+      data: { meetings },
+    } = req.body;
+    for (const {
+      Meeting_Note_ID,
+      Description = null,
+      Date = null,
+      Meeting_Note = null,
+    } of meetings) {
+      const obj = await MeetingNotes.findOne({
+        where: { Meeting_Note_ID, },
+      });
+      if (obj) {
+        obj.update({
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      } else {
+        MeetingNotes.create({
+          Meeting_Note_ID,
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
 
     res.status(400).json({
       status: "Error",

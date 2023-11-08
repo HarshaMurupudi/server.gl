@@ -45,42 +45,45 @@ router.get("/jobsByVendor/:vendorName", async (req, res) => {
       }
     }
 
-    const fJobs = await glDB.query(
-      `
-          SELECT *
-          FROM (
-            SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
-            j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
-            jo.WC_Vendor, jo.Sequence,
-            del.Promised_Date,
-            Plan_Notes, t3.Priority,
-            ROW_NUMBER() OVER (PARTITION BY
-            j.Job ORDER BY j.Sched_Start) AS row_number,
-            jo.Est_Total_Hrs,
-            del.DeliveryKey,
-            jo.Job_OperationKey,
-            j.Lead_Days,
-            j.Customer_PO, j.Top_Lvl_Job
-            FROM [dbo].[Job] AS j
-            LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
-            LEFT JOIN 
-                  (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
-            LEFT JOIN
-            (SELECT * FROM [General_Label].[dbo].[Vendor_Notes] ) AS t3 
-            ON 
-              jo.Job = t3.Job
-              AND jo.Job_OperationKey = t3.Job_OperationKey
-            WHERE j.[Job] IN (:jobIDs) AND jo.WC_Vendor = :vendor
-          ) AS t
-            WHERE t.row_number = 1;
-          `,
-      {
-        replacements: {
-          jobIDs: jobIds,
-          vendor: vendorName,
-        },
-      }
-    );
+    const fJobs =
+      jobIds.length > 0
+        ? await glDB.query(
+        `
+            SELECT *
+            FROM (
+              SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
+              j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
+              jo.WC_Vendor, jo.Sequence,
+              del.Promised_Date,
+              Plan_Notes, t3.Priority,
+              ROW_NUMBER() OVER (PARTITION BY
+              j.Job ORDER BY j.Sched_Start) AS row_number,
+              jo.Est_Total_Hrs,
+              del.DeliveryKey,
+              jo.Job_OperationKey,
+              j.Lead_Days,
+              j.Customer_PO, j.Top_Lvl_Job
+              FROM [dbo].[Job] AS j
+              LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
+              LEFT JOIN 
+                    (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]) AS del ON j.Job = del.Job
+              LEFT JOIN
+              (SELECT * FROM [General_Label].[dbo].[Vendor_Notes] ) AS t3 
+              ON 
+                jo.Job = t3.Job
+                AND jo.Job_OperationKey = t3.Job_OperationKey
+              WHERE j.[Job] IN (:jobIDs) AND jo.WC_Vendor = :vendor
+            ) AS t
+              WHERE t.row_number = 1;
+            `,
+        {
+          replacements: {
+            jobIDs: jobIds,
+            vendor: vendorName,
+          },
+        }
+      )
+      : [[]];
 
     for (const job of fJobs[0]) {
       if (!job["Promised_Date"]) {
@@ -149,7 +152,6 @@ router.get("/vendor/open/:vendorName", async (req, res) => {
           ON 
             jo.Job = t3.Job
             AND jo.Job_OperationKey = t3.Job_OperationKey
-            AND jo.Vendor = t3.Vendor
             AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
           where 
           j.status in ('Active','Hold', 'Pending', 'Complete') 
