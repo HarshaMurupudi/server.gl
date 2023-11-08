@@ -178,6 +178,111 @@ router.get("/obsolete/jobs/open/:workCenterName", async (req, res) => {
       }
     );
 
+    // let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
+    // const fJobs = await Operation.findAll({
+    //   where: {
+    //     Job: setOfJobs,
+    //   },
+    // });
+
+    for (const job of jobs[0]) {
+      // const jobsWithData = fJobs.filter((iJob) => {
+      //   return iJob.Job == job.Job;
+      // });
+      // const filteredJobs = jobsWithData.filter(
+      //   (fJob) => fJob.Status === "S" || fJob.Status === "O"
+      // );
+      // const sortedJobs = filteredJobs.sort(compare);
+
+      // if (sortedJobs.length > 0) {
+      //   job["Now At"] = sortedJobs[0]["Work_Center"];
+      // }
+
+      if (!job["Promised_Date"]) {
+        const rootJobDel = await glDB.query(
+          `
+              SELECT * FROM [Production].[dbo].[Delivery] 
+              WHERE Job= :jobID
+            `,
+          {
+            replacements: {
+              jobID: job.Top_Lvl_Job,
+            },
+          }
+        );
+
+        if (rootJobDel[0].length > 0) {
+          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
+            "Promised_Date"
+          ];
+        }
+      }
+    }
+
+    res.status(200).json({
+      status: "success",
+      results: jobs[0].length,
+      jobs: jobs[0],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/obsolete/jobs/open/:workCenterName/now-at", async (req, res) => {
+  try {
+    const { workCenterName } = req.params;
+
+    // const jobs = [await Job.findAll({ limit: 5 })];
+
+    // if()
+
+    const jobs = await glDB.query(
+      `
+          select 
+            j.Job, j.Customer, Part_Number, j.Status, j.Description, 
+            j.Sched_Start, j.Make_Quantity, j.Note_Text,
+            j.Sales_Code, jo.Work_Center, jo.Status, jo.Sequence, j.Rev, j.Quote,
+            jo.WC_Vendor,
+            del.Promised_Date,
+            j.Lead_Days,
+            Plan_Notes, t3.Priority,
+            (del.Promised_Date - j.Lead_Days) AS Ship_By_Date,
+            jo.Est_Total_Hrs,
+            del.DeliveryKey,
+            jo.Job_OperationKey,
+            j.Lead_Days,
+            j.Customer_PO, j.Top_Lvl_Job
+          from [Production].[dbo].[Job] as j
+          left join
+          (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
+          on j.Job = jo.Job
+          LEFT JOIN 
+            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+            AS del ON j.Job = del.Job
+          LEFT JOIN
+          (SELECT * FROM [General_Label].[dbo].[Obsolete_Notes]) AS t3 
+          ON 
+            jo.Job = t3.Job 
+            AND jo.Job_OperationKey = t3.Job_OperationKey
+            AND jo.Work_Center = t3.Work_Center
+            AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+          where 
+          j.status in ('Active','Hold', 'Pending', 'Complete') 
+          AND 
+          jo.Work_Center = :wc;
+        `,
+      {
+        replacements: {
+          wc: workCenterName,
+        },
+      }
+    );
+
     let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
     const fJobs = await Operation.findAll({
       where: {
