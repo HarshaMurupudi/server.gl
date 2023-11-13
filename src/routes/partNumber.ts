@@ -216,7 +216,10 @@ router.get(
         (name) =>
           name.includes(".pdf") ||
           name.includes(".doc") ||
-          name.includes(".PDF")
+          name.includes(".PDF") ||
+          name.includes(".eps") ||
+          name.includes(".dxf") ||
+          name.includes(".rcp")
       );
 
       if (pdfs.length > 0) {
@@ -254,10 +257,17 @@ router.get(
     const allFiles = fs.readdirSync(filePath);
     const pdf = allFiles.filter(
       (name) =>
-        name.includes(".pdf") || name.includes(".doc") || name.includes(".PDF")
+        name.includes(".pdf") ||
+        name.includes(".doc") ||
+        name.includes(".PDF") ||
+        name.includes(".eps") ||
+        name.includes(".dxf") ||
+        name.includes(".rcp")
     );
 
     const fileName = pdf[parseInt(count) - 1];
+    res.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
     try {
       if (fileName) {
         await res.download(filePath + fileName);
