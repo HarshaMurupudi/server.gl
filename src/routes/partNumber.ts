@@ -175,7 +175,7 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
       ON LOC.Material = mr.Material
-      WHERE LOC.Material LIKE :partID + '%';
+      WHERE LOC.Material = :partID OR LOC.Material LIKE :partID + '[_]%';
       `,
       {
         replacements: {
