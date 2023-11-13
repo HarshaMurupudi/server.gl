@@ -33,7 +33,6 @@ const printJobs = require("./routes/work-centers/print");
 const vendorJobs = require("./routes/work-centers/vendor");
 const materialRequirements = require("./routes/materialRequirement");
 
-
 const PORT = process.env.PORT;
 
 glDB
@@ -48,7 +47,11 @@ glDB
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    exposedHeaders: ["Content-Disposition"],
+  })
+);
 app.use(express.json({ limit: "5mb" }));
 app.use(jobRoutes);
 app.use(auth);
