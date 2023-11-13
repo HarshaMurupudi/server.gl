@@ -31,6 +31,9 @@ const Operation = db.define(
     Note_Text: {
       type: Sequelize.STRING,
     },
+    Floor_Notes: {
+      type: Sequelize.STRING,
+    },
     Est_Total_Hrs: {
       type: Sequelize.NUMBER,
     },
