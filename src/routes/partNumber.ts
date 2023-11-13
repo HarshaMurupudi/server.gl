@@ -266,12 +266,7 @@ router.get(
     );
 
     const fileName = pdf[parseInt(count) - 1];
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=" + fileName
-    );
-
-    console.log(res.getHeader('Content-Disposition'));
+    res.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
     try {
       if (fileName) {
