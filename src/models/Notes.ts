@@ -30,6 +30,9 @@ const DeliveryNotes = db.define(
     DeliveryKey: {
       type: Sequelize.INTEGER,
     },
+    Production_Status: {
+      type: Sequelize.BOOLEAN
+    }
   },
   {
     // don't add the timestamp attributes (updatedAt, createdAt)

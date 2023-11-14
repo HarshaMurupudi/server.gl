@@ -62,6 +62,7 @@ router.patch("/notes", async (req, res) => {
       Plan_Notes = null,
       Assigned_To = null,
       DeliveryKey = null,
+      Production_Status = null,
     } of jobs) {
       const obj = await Note.findOne({
         where: { DeliveryKey, Job },
@@ -75,6 +76,9 @@ router.patch("/notes", async (req, res) => {
           Assigned_To,
           Sales_Notes,
           Job_Plan,
+          Production_Status: Production_Status
+            ? parseInt(Production_Status)
+            : Production_Status,
         });
       } else {
         Note.create({
@@ -86,6 +90,9 @@ router.patch("/notes", async (req, res) => {
           Assigned_To,
           Sales_Notes,
           Job_Plan,
+          Production_Status: Production_Status
+            ? parseInt(Production_Status)
+            : Production_Status,
         });
       }
     }
