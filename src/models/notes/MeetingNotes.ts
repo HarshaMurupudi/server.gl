@@ -14,7 +14,7 @@ const MeetingNotes = db.define(
       type: Sequelize.STRING,
     },
     Date: {
-      type: Sequelize.DATE,
+      type: Sequelize.STRING,
     },
     Meeting_Note: {
       type: Sequelize.STRING,
