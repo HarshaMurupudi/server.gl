@@ -89,7 +89,7 @@ router.get("/material/requirements/:jobID", async (req, res) => {
       materialsWithJobs[material].jobs = materailJobs || [];
       materialsWithJobs[material].type = type;
       materialsWithJobs[material].description = description;
-      materialsWithJobs[material].estUnitCost = estUnitCost;
+      materialsWithJobs[material].estUnitCost = Number(estUnitCost).toFixed(2);
       materialsWithJobs[material].leadDays = leadDays;
       materialsWithJobs[material].onHandMaterial = onHandMaterialData;
       materialsWithJobs[material].onOrderMaterial = onOrderMaterialData;
@@ -107,16 +107,16 @@ router.get("/material/requirements/:jobID", async (req, res) => {
         let risk = "None";
 
         if (tempCount >= 0) {
-          allocation = `${Est_Qty} from current inventory`;
+          allocation = `${Number(Est_Qty).toFixed(2)} from current inventory`;
         } else {
           if (Est_Qty + tempCount > 0) {
             risk = "Critical";
-            allocation = `${Est_Qty + tempCount} from inventory & ${Math.abs(
+            allocation = `${(Number(Est_Qty + tempCount).toFixed(2))} from inventory & ${Math.abs(
               tempCount
             )} required`;
           } else {
             risk = "Critical";
-            allocation = `${Est_Qty} required`;
+            allocation = `${Number(Est_Qty).toFixed(2)} required`;
           }
         }
         materialJob.allocation = allocation;
