@@ -205,11 +205,12 @@ router.get(
   async (req, res) => {
     try {
       const { partNumber } = req.params;
+      const partNumb = partNumber.split("_")[0];
       var isWin = process.platform === "win32";
 
       const filePath = isWin
-        ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\Current\\Cutting\\Plotter\\`
-        : `//gl-fs01/GLIParts/${partNumber}/Current/Cutting/Plotter/`;
+        ? `\\\\gl-fs01\\GLIParts\\${partNumb}\\Current\\Cutting\\Plotter\\`
+        : `//gl-fs01/GLIParts/${partNumb}/Current/Cutting/Plotter/`;
 
       const allFiles = fs.readdirSync(filePath);
       const pdfs = allFiles.filter(
@@ -248,11 +249,12 @@ router.get(
   "/part-numbers/:partNumber/cutting/zund/pdfs/:count",
   async (req, res) => {
     const { partNumber, count } = req.params;
+    const partNumb = partNumber.split("_")[0];
     var isWin = process.platform === "win32";
 
     const filePath = isWin
-      ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\Current\\Cutting\\Plotter\\`
-      : `//gl-fs01/GLIParts/${partNumber}/Current/Cutting/Plotter/`;
+      ? `\\\\gl-fs01\\GLIParts\\${partNumb}\\Current\\Cutting\\Plotter\\`
+      : `//gl-fs01/GLIParts/${partNumb}/Current/Cutting/Plotter/`;
 
     const allFiles = fs.readdirSync(filePath);
     const pdf = allFiles.filter(

@@ -539,7 +539,6 @@ router.get("/delivery/shiplines", async (req, res) => {
           DeliveryKey,
           Sales_Code,
           Note_Text,
-          Floor_Notes
           Unit_Price,
           Ship_Via,
           Shipped_Quantity,
@@ -550,7 +549,6 @@ router.get("/delivery/shiplines", async (req, res) => {
             (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
-            cast (t1.Floor_Notes) as nvarchar(max)) as Floor_Notes,
             t3.[Engineering_Notes], 
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
