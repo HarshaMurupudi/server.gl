@@ -14,6 +14,7 @@ const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
+const meeting = require("./routes/meeting")
 
 // WC
 const circuitDepJobs = require("./routes/work-centers/circuitDepartment");
@@ -64,6 +65,7 @@ app.use(powerBI);
 app.use(partNumber);
 app.use(operationTime);
 app.use(jobBoss);
+app.use(meeting);
 app.use(materialRequirements);
 
 // WC
@@ -82,6 +84,6 @@ app.use(vendorJobs);
 app.use(printJobs);
 
 app.listen(PORT, () => {
-  console.log(`Sever is up and listening on port ${PORT}`);
+  console.log(`Server is up and listening on port ${PORT}`);
   console.log(process.env.DB_NAME, "env");
 });

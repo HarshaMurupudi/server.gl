@@ -17,6 +17,7 @@ const ObsoleteNotes = require("../models/notes/ObsoleteNotes");
 const RoltNotes = require("../models/notes/RoltNotes");
 const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
+const MeetingNotes = require("../models/notes/MeetingNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -145,6 +146,49 @@ router.patch("/engineering/notes", async (req, res) => {
     });
   }
 });
+
+router.patch("/meeting/notes", async (req, res) => {
+  try {
+    const {
+      data: { meetings },
+    } = req.body;
+    for (const {
+      Meeting_Note_ID,
+      Description = null,
+      Date = null,
+      Meeting_Note = null,
+    } of meetings) {
+      const obj = await MeetingNotes.findOne({
+        where: { Meeting_Note_ID, },
+      });
+      if (obj) {
+        obj.update({
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      } else {
+        MeetingNotes.create({
+          Meeting_Note_ID,
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
 
 router.patch("/print/notes", async (req, res) => {
   try {
