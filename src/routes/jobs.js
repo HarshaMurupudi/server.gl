@@ -422,7 +422,7 @@ router.get("/jobs/pending", async (req, res) => {
         FROM [Production].[dbo].[Job] AS t1 
         LEFT JOIN
         (
-          SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery]
+          SELECT Job, Promised_Date, Requested_Date, DeliveryKey, Promised_Quantity FROM [Production].[dbo].[Delivery]
           WHERE Packlist IS NULL
         ) 
         AS t2 ON t1.Job = t2.Job
@@ -434,6 +434,84 @@ router.get("/jobs/pending", async (req, res) => {
         WHERE Status = 'Pending';
       `
     );
+
+    res.status(200).json({
+      status: "success",
+      results: jobs[0].length,
+      jobs: jobs[0],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/jobs/pending/quantity", async (req, res) => {
+  try {
+    // const jobs = await Job.findAll({ where: { Status: 'Pending' } });
+
+    const jobs = await glDB.query(
+      `
+        SELECT *, t2.DeliveryKey, t1.Job, (Promised_Date - Lead_Days) AS Ship_By_Date 
+        FROM [Production].[dbo].[Job] AS t1 
+        LEFT JOIN
+        (
+          SELECT Job, Promised_Date, Requested_Date, DeliveryKey, Promised_Quantity FROM [Production].[dbo].[Delivery]
+          WHERE Packlist IS NULL
+        ) 
+        AS t2 ON t1.Job = t2.Job
+        LEFT JOIN
+        (
+          SELECT * FROM [General_Label].[dbo].[Pending_Jobs_Notes] 
+        ) 
+        AS t3 ON t1.Job = t3.Job AND t2.DeliveryKey = t3.DeliveryKey
+        WHERE Status = 'Pending';
+      `
+    );
+
+    const queriesPartList = [];
+    console.log(jobs)
+
+    for (const job of jobs[0]) {
+      if (!queriesPartList.includes(job.Part_Number)) {
+        const parts = await glDB.query(
+          `
+        SELECT 
+        LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
+        INNER JOIN
+        (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
+        ON LOC.Material = MAT.Material
+        LEFT JOIN
+        (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
+        ON LOC.Material = mr.Material
+        WHERE LOC.Material LIKE :partID + '%';
+        `,
+          {
+            replacements: {
+              partID: job.Part_Number,
+            },
+            type: glDB.QueryTypes.SELECT,
+          }
+        );
+
+        const total = parts.reduce((sum, item) => {
+          sum = sum + item.On_Hand_Qty;
+          return sum;
+        }, 0);
+        // queriesPartList.push(job.Part_Number);
+        job.On_Hand_Qty = total;
+
+        const allocatedTotal = parts.reduce((sum, item) => {
+          sum = sum + item.Allocated_Qty;
+          return sum;
+        }, 0);
+        queriesPartList.push(job.Part_Number);
+        job.Allocated_Qty = allocatedTotal;
+      }
+    }
 
     res.status(200).json({
       status: "success",
