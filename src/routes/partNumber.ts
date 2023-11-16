@@ -175,7 +175,7 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
       ON LOC.Material = mr.Material
-      WHERE LOC.Material LIKE :partID + '%';
+      WHERE LOC.Material = :partID OR LOC.Material LIKE :partID + '[_]%';
       `,
       {
         replacements: {
@@ -205,18 +205,22 @@ router.get(
   async (req, res) => {
     try {
       const { partNumber } = req.params;
+      const partNumb = partNumber.split("_")[0];
       var isWin = process.platform === "win32";
 
       const filePath = isWin
-        ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\Current\\Cutting\\Plotter\\`
-        : `//gl-fs01/GLIParts/${partNumber}/Current/Cutting/Plotter/`;
+        ? `\\\\gl-fs01\\GLIParts\\${partNumb}\\Current\\Cutting\\Plotter\\`
+        : `//gl-fs01/GLIParts/${partNumb}/Current/Cutting/Plotter/`;
 
       const allFiles = fs.readdirSync(filePath);
       const pdfs = allFiles.filter(
         (name) =>
           name.includes(".pdf") ||
           name.includes(".doc") ||
-          name.includes(".PDF")
+          name.includes(".PDF") ||
+          name.includes(".eps") ||
+          name.includes(".dxf") ||
+          name.includes(".rcp")
       );
 
       if (pdfs.length > 0) {
@@ -245,19 +249,27 @@ router.get(
   "/part-numbers/:partNumber/cutting/zund/pdfs/:count",
   async (req, res) => {
     const { partNumber, count } = req.params;
+    const partNumb = partNumber.split("_")[0];
     var isWin = process.platform === "win32";
 
     const filePath = isWin
-      ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\Current\\Cutting\\Plotter\\`
-      : `//gl-fs01/GLIParts/${partNumber}/Current/Cutting/Plotter/`;
+      ? `\\\\gl-fs01\\GLIParts\\${partNumb}\\Current\\Cutting\\Plotter\\`
+      : `//gl-fs01/GLIParts/${partNumb}/Current/Cutting/Plotter/`;
 
     const allFiles = fs.readdirSync(filePath);
     const pdf = allFiles.filter(
       (name) =>
-        name.includes(".pdf") || name.includes(".doc") || name.includes(".PDF")
+        name.includes(".pdf") ||
+        name.includes(".doc") ||
+        name.includes(".PDF") ||
+        name.includes(".eps") ||
+        name.includes(".dxf") ||
+        name.includes(".rcp")
     );
 
     const fileName = pdf[parseInt(count) - 1];
+    res.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
     try {
       if (fileName) {
         await res.download(filePath + fileName);

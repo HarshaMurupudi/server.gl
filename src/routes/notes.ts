@@ -18,6 +18,7 @@ const RoltNotes = require("../models/notes/RoltNotes");
 const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
 const AttendanceNotes = require("../models/notes/AttendanceNotes");
+const MeetingNotes = require("../models/notes/MeetingNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -63,6 +64,7 @@ router.patch("/notes", async (req, res) => {
       Plan_Notes = null,
       Assigned_To = null,
       DeliveryKey = null,
+      Production_Status = null,
     } of jobs) {
       const obj = await Note.findOne({
         where: { DeliveryKey, Job },
@@ -76,6 +78,9 @@ router.patch("/notes", async (req, res) => {
           Assigned_To,
           Sales_Notes,
           Job_Plan,
+          Production_Status: Production_Status
+            ? parseInt(Production_Status)
+            : Production_Status,
         });
       } else {
         Note.create({
@@ -87,6 +92,9 @@ router.patch("/notes", async (req, res) => {
           Assigned_To,
           Sales_Notes,
           Job_Plan,
+          Production_Status: Production_Status
+            ? parseInt(Production_Status)
+            : Production_Status,
         });
       }
     }
@@ -139,6 +147,49 @@ router.patch("/engineering/notes", async (req, res) => {
     });
   }
 });
+
+router.patch("/meeting/notes", async (req, res) => {
+  try {
+    const {
+      data: { meetings },
+    } = req.body;
+    for (const {
+      Meeting_Note_ID,
+      Description = null,
+      Date = null,
+      Meeting_Note = null,
+    } of meetings) {
+      const obj = await MeetingNotes.findOne({
+        where: { Meeting_Note_ID, },
+      });
+      if (obj) {
+        obj.update({
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      } else {
+        MeetingNotes.create({
+          Meeting_Note_ID,
+          Description,
+          Date,
+          Meeting_Note,
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
 
 router.patch("/print/notes", async (req, res) => {
   try {

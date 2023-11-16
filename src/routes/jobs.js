@@ -64,14 +64,15 @@ router.get("/", async (req, res) => {
           Unit_Price,
           Ship_Via,
           Shipped_Quantity,
-          Quote
+          Quote,
+          Production_Status
         FROM 
         (
           SELECT DISTINCT 
             (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
-            t3.[Engineering_Notes], 
+            t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
@@ -193,14 +194,15 @@ router.get("/now-at", async (req, res) => {
           Unit_Price,
           Ship_Via,
           Shipped_Quantity,
-          Quote
+          Quote,
+          Production_Status
         FROM 
         (
           SELECT DISTINCT 
             (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
-            t3.[Engineering_Notes], 
+            t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
             t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
@@ -236,7 +238,40 @@ router.get("/now-at", async (req, res) => {
       },
     });
 
+    const queriesPartList = [];
     for (const job of jobs[0]) {
+      // for all jobs get on hand quantity and sum
+      // if material has value don't
+
+      if (!queriesPartList.includes(job.Part_Number)) {
+        const parts = await glDB.query(
+          `
+          SELECT 
+          LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
+          INNER JOIN
+          (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
+          ON LOC.Material = MAT.Material
+          LEFT JOIN
+          (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
+          ON LOC.Material = mr.Material
+          WHERE LOC.Material LIKE :partID + '%';
+          `,
+          {
+            replacements: {
+              partID: job.Part_Number,
+            },
+            type: glDB.QueryTypes.SELECT,
+          }
+        );
+
+        const total = parts.reduce((sum, item) => {
+          sum = sum + item.On_Hand_Qty;
+          return sum;
+        }, 0);
+        queriesPartList.push(job.Part_Number);
+        job.On_Hand_Qty = total;
+      }
+
       const jobsWithData = fJobs.filter((iJob) => {
         return iJob.Job == job.Job;
       });
