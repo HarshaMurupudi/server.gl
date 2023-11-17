@@ -17,6 +17,7 @@ const ObsoleteNotes = require("../models/notes/ObsoleteNotes");
 const RoltNotes = require("../models/notes/RoltNotes");
 const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
+const AttendanceNotes = require("../models/notes/AttendanceNotes");
 const MeetingNotes = require("../models/notes/MeetingNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
@@ -253,6 +254,59 @@ router.patch("/vendor/notes", async (req, res) => {
   }
 });
 
+router.patch("/attendance/notes", async (req, res) => {
+  try {
+    const {
+      data: { attendance },
+    } = req.body;
+    for (const {
+      Attendance_Note_ID,
+      Employee = null,
+      First_Name = null,
+      Last_Name = null,
+      Status = null,
+      Login = null,
+      Logout = null,
+      Attendance_Note = null,
+    } of attendance) {
+      const obj = await AttendanceNotes.findOne({
+        where: { Attendance_Note_ID },
+      });
+      if (obj) {
+        obj.update({
+          Employee,
+          First_Name,
+          Last_Name,
+          Status,
+          Login,
+          Logout,
+          Attendance_Note,
+        });
+      } else {
+        AttendanceNotes.create({
+          Attendance_Note_ID,
+          Employee,
+          First_Name,
+          Last_Name,
+          Status,
+          Login,
+          Logout,
+          Attendance_Note,
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
 router.patch("/jobs/pending/notes", async (req, res) => {
   try {
     const {

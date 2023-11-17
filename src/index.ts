@@ -14,6 +14,7 @@ const powerBI = require("./routes/powerBI");
 const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
+const attendance = require("./routes/attendance");
 const meeting = require("./routes/meeting")
 
 // WC
@@ -65,6 +66,7 @@ app.use(powerBI);
 app.use(partNumber);
 app.use(operationTime);
 app.use(jobBoss);
+app.use(attendance);
 app.use(meeting);
 app.use(materialRequirements);
 
