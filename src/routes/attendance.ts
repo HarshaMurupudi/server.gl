@@ -27,8 +27,8 @@ router.get("/attendance", async (req, res) => {
       (SELECT *
       FROM [General_Label].[dbo].[Attendance_Notes]) AS t3
       ON t1.Employee = t3.Employee AND t2.Login = t3.Login
-      WHERE t2.Login > DATEADD(day, -1, getdate())
-      AND t2.Login < DATEADD(day, 1, getdate())
+      WHERE t2.Login > getdate()
+      AND t2.Login < getdate()
       `
     );
     if (attendance[0].length > 0 ) {
