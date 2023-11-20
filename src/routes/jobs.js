@@ -101,39 +101,6 @@ router.get("/", async (req, res) => {
       }
     );
 
-    // let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
-    // const fJobs = await Operation.findAll({
-    //   where: {
-    //     Job: setOfJobs,
-    //   },
-    // });
-
-    // for (const job of jobs[0]) {
-    //   const jobsWithData = fJobs.filter((iJob) => {
-    //     return iJob.Job == job.Job;
-    //   });
-
-    //   const filteredJobs = jobsWithData.filter(
-    //     (fJob) => fJob.Status === "S" || fJob.Status === "O"
-    //   );
-
-    //   const filteredCompletedJobs = jobsWithData.filter(
-    //     (fJob) => fJob.Status === "C"
-    //   );
-
-    //   const sortedCompletedJobs = filteredCompletedJobs.sort(compare);
-    //   const sortedJobs = filteredJobs.sort(compare);
-
-    //   if (sortedJobs.length > 0) {
-    //     job["Now At"] = sortedJobs[0]["Work_Center"];
-    //   }
-
-    //   if (job["Status"] === "Complete" && sortedCompletedJobs.length > 0) {
-    //     job["Now At"] =
-    //       sortedCompletedJobs[sortedCompletedJobs.length - 1]["Work_Center"];
-    //   }
-    // }
-
     res.status(200).json({
       status: "success",
       results: jobs[0].length,
@@ -254,7 +221,7 @@ router.get("/now-at", async (req, res) => {
           LEFT JOIN
           (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
           ON LOC.Material = mr.Material
-          WHERE LOC.Material LIKE :partID + '%';
+          WHERE LOC.Material = :partID;
           `,
           {
             replacements: {
@@ -473,7 +440,7 @@ router.get("/jobs/pending/quantity", async (req, res) => {
     );
 
     const queriesPartList = [];
-    console.log(jobs)
+    console.log(jobs);
 
     for (const job of jobs[0]) {
       if (!queriesPartList.includes(job.Part_Number)) {
