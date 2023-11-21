@@ -18,6 +18,7 @@ const RoltNotes = require("../models/notes/RoltNotes");
 const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
 const MeetingNotes = require("../models/notes/MeetingNotes");
+const EmployeeReviewNotes = require("../models/notes/EmployeeReviewNotes")
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -158,7 +159,7 @@ router.patch("/meeting/notes", async (req, res) => {
       Date = null,
       Meeting_Note = null,
     } of meetings) {
-      const values = { Description, Date, Meeting_Note };
+      //const values = { Description, Date, Meeting_Note };
       const obj = await MeetingNotes.findOne({
         where: { Meeting_Note_ID },
       });
@@ -171,7 +172,60 @@ router.patch("/meeting/notes", async (req, res) => {
       } else {
         MeetingNotes.create({
           Meeting_Note_ID,
-          values
+          Description,
+          Date,
+          Meeting_Note
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/reports/notes", async (req, res) => {
+  try {
+    const {
+      data: { reports },
+    } = req.body;
+    for (const {
+      Review_ID,
+      Employee = null,
+      Report_Type = null,
+      Report_Note = null,
+      Review_Note = null,
+      Reviewed_By = null,
+      Date = null,
+    } of reports) {
+      const obj = await EmployeeReviewNotes.findOne({
+        where: { Review_ID },
+      });
+      if (obj) {
+        obj.update({
+          Employee,
+          Report_Note,
+          Report_Type,
+          Review_Note,
+          Reviewed_By,
+          Date,
+        });
+      } else {
+        EmployeeReviewNotes.create({
+          Review_ID,
+          Employee,
+          Report_Note,
+          Report_Type,
+          Review_Note,
+          Reviewed_By,
+          Date,
         });
       }
     }

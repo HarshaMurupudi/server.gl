@@ -15,6 +15,7 @@ const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
 const meeting = require("./routes/meeting")
+const reports = require("./routes/employeeReview");
 
 // WC
 const circuitDepJobs = require("./routes/work-centers/circuitDepartment");
@@ -66,6 +67,7 @@ app.use(partNumber);
 app.use(operationTime);
 app.use(jobBoss);
 app.use(meeting);
+app.use(reports);
 app.use(materialRequirements);
 
 // WC
