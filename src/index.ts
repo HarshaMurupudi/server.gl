@@ -16,6 +16,7 @@ const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
 const attendance = require("./routes/attendance");
 const meeting = require("./routes/meeting")
+const training = require("./routes/training");
 
 // WC
 const circuitDepJobs = require("./routes/work-centers/circuitDepartment");
@@ -68,6 +69,7 @@ app.use(operationTime);
 app.use(jobBoss);
 app.use(attendance);
 app.use(meeting);
+app.use(training);
 app.use(materialRequirements);
 
 // WC
