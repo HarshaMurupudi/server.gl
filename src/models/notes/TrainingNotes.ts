@@ -5,9 +5,9 @@ const TrainingLogNotes = db.define(
   'Training_Log',
   {
     Training_ID: {
-      primaryKey: true,
       type: Sequelize.INTEGER,
-      autoIncrement: true
+      primaryKey: true,
+      autoIncrement: true,
     },
     Date: {
       type: Sequelize.STRING,
@@ -15,7 +15,7 @@ const TrainingLogNotes = db.define(
     Trainer: {
       type: Sequelize.STRING,
     },
-    Employee: {
+    Employee_Name: {
         type: Sequelize.STRING,
       },
     Training_Title: {
@@ -25,6 +25,9 @@ const TrainingLogNotes = db.define(
       type: Sequelize.STRING,
     },
     Repeat_After: {
+      type: Sequelize.STRING
+    },
+    Note: {
       type: Sequelize.STRING
     }
   },

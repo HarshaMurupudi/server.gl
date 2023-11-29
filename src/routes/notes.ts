@@ -309,7 +309,7 @@ router.patch("/attendance/notes", async (req, res) => {
   }
 });
 
-router.patch("/training/notes", async (req, res) => {
+router.patch("/training/log", async (req, res) => {
   try {
     const {
       data: { trainingLog },
@@ -318,7 +318,7 @@ router.patch("/training/notes", async (req, res) => {
       Training_ID,
       Date = null,
       Trainer = null,
-      Employee = null,
+      Employee_Name = null,
       Training_Title = null,
       Needs_Repeat = null,
       Repeat_After = null,
@@ -331,7 +331,7 @@ router.patch("/training/notes", async (req, res) => {
         obj.update({
           Date,
           Trainer,
-          Employee,
+          Employee_Name,
           Training_Title,
           Needs_Repeat,
           Repeat_After,
@@ -342,7 +342,7 @@ router.patch("/training/notes", async (req, res) => {
           Training_ID,
           Date,
           Trainer,
-          Employee,
+          Employee_Name,
           Training_Title,
           Needs_Repeat,
           Repeat_After,
