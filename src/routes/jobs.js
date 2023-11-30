@@ -1,12 +1,52 @@
 import express, { Request, Response } from "express";
 import fs from "fs";
-import { Op } from "sequelize";
+import { Op, DATE } from "sequelize";
+const path = require("path");
 
+import {
+  folderController,
+  jobController,
+  partController,
+} from "../controllers";
 const JobModel = require("../models/Job");
 const Operation = require("../models/Operation");
 const Delivery = require("../models/Delivery");
 const router = express.Router();
 const { glDB } = require("../config/database");
+
+DATE.prototype._stringify = function _stringify(date, options) {
+  date = this._applyTimezone(date, options);
+  // Z here means current timezone, _not_ UTC
+  // return date.format('YYYY-MM-DD HH:mm:ss.SSS Z');
+  return date.format("YYYY-MM-DD HH:mm:ss.SSS");
+};
+
+const create = (dir, structure, cb = null) => {
+  cb = (
+    (cb) =>
+    (...a) =>
+      setTimeout(() => cb.apply(null, a))
+  )(cb);
+  const subdirs = Reflect.ownKeys(structure);
+
+  if (subdirs.length) {
+    const sub = subdirs[0];
+    const pth = path.join(dir, sub);
+    const subsub = structure[sub];
+    const copy = Object.assign({}, structure);
+    delete copy[sub];
+
+    fs.mkdir(pth, (err) => {
+      if (err) return cb(err);
+      create(pth, subsub, (err) => {
+        if (err) return cb(err);
+        create(dir, copy, cb);
+      });
+    });
+  } else {
+    cb(null);
+  }
+};
 
 function compare(a, b) {
   if (a.Sequence < b.Sequence) {
@@ -464,7 +504,7 @@ router.get("/jobs/pending/quantity", async (req, res) => {
     );
 
     const queriesPartList = [];
-    console.log(jobs)
+    console.log(jobs);
 
     for (const job of jobs[0]) {
       if (!queriesPartList.includes(job.Part_Number)) {
@@ -689,6 +729,101 @@ router.get("/delivery/shiplines", async (req, res) => {
     res.status(400).json({
       status: "Error",
       message: error.message,
+    });
+  }
+});
+
+router.get("/jobs/search", async (req, res) => {
+  try {
+    let query = {
+      where: { [req.query.column]: { [Op.like]: req.query.value + "%" } },
+      attributes: [req.query.column],
+      limit: 6,
+    };
+
+    const jobs = await JobModel.findAll(query);
+    const flatJobs = [...new Set(jobs.map((item) => item[req.query.column]))];
+
+    res.status(200).json({
+      status: "success",
+      results: flatJobs.length,
+      jobs: flatJobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/jobs/latest", async (req, res) => {
+  try {
+    const jobs = await jobController.getLatestJobs();
+
+    res.status(200).json({
+      status: "success",
+      results: jobs.length,
+      jobs: jobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.post("/jobs/folder/:job", async (req, res) => {
+  try {
+    const { job } = req.params;
+    await folderController.createJob(job);
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+      code: error.code,
+    });
+  }
+});
+
+router.get("/parts/latest", async (req, res) => {
+  try {
+    const jobs = await partController.getLatestParts();
+
+    res.status(200).json({
+      status: "success",
+      results: jobs.length,
+      jobs: jobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.post("/parts/folder/:partNumber", async (req, res) => {
+  try {
+    const { partNumber } = req.params;
+    await folderController.createPart(partNumber);
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+      code: error.code,
     });
   }
 });

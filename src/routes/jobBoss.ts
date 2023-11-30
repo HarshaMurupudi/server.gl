@@ -14,7 +14,7 @@ const EXE_PATH = path.join(
 var opt = function (method: string, arg1: string, arg2: string) {
   exec(EXE_PATH, [method, arg1, arg2], function (err: any, data: any) {
     console.log(err);
-    console.log(data.toString());
+    // console.log(data.toString());
   });
 };
 
