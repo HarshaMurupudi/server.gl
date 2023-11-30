@@ -65,7 +65,8 @@ router.get("/", async (req, res) => {
           Ship_Via,
           Shipped_Quantity,
           Quote,
-          Production_Status
+          Production_Status,
+          Numeric2
         FROM 
         (
           SELECT DISTINCT 
@@ -73,9 +74,10 @@ router.get("/", async (req, res) => {
             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
             t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
-            t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
+            t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
-            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
+            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
+            Numeric2
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
@@ -83,12 +85,22 @@ router.get("/", async (req, res) => {
             LEFT JOIN
             (SELECT Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
               ON t1.User_Values = u.U_User_Values
+            
             LEFT JOIN
             (SELECT * FROM [General_Label].[dbo].[Delivery_Notes] ) AS t3 
               ON t1.Job = t3.Job 
               AND (t2.DeliveryKey = t3.DeliveryKey
               OR (t2.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
-            WHERE Status IN ('Active', 'Complete')
+
+              LEFT JOIN 
+              (SELECT User_Values, Customer FROM [Production].[dbo].[Customer]) as c
+              ON t1.Customer = c.Customer
+       
+              LEFT JOIN
+              (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
+              ON c.User_Values = u2.User_Values
+
+            WHERE t1.Status IN ('Active', 'Complete')
             ) a
         WHERE Ship_By_Date between :startDate and :endDate
         ORDER BY Ship_By_Date;
@@ -100,39 +112,6 @@ router.get("/", async (req, res) => {
         },
       }
     );
-
-    // let setOfJobs = [...new Set(jobs[0].map((cJob) => cJob.Job))];
-    // const fJobs = await Operation.findAll({
-    //   where: {
-    //     Job: setOfJobs,
-    //   },
-    // });
-
-    // for (const job of jobs[0]) {
-    //   const jobsWithData = fJobs.filter((iJob) => {
-    //     return iJob.Job == job.Job;
-    //   });
-
-    //   const filteredJobs = jobsWithData.filter(
-    //     (fJob) => fJob.Status === "S" || fJob.Status === "O"
-    //   );
-
-    //   const filteredCompletedJobs = jobsWithData.filter(
-    //     (fJob) => fJob.Status === "C"
-    //   );
-
-    //   const sortedCompletedJobs = filteredCompletedJobs.sort(compare);
-    //   const sortedJobs = filteredJobs.sort(compare);
-
-    //   if (sortedJobs.length > 0) {
-    //     job["Now At"] = sortedJobs[0]["Work_Center"];
-    //   }
-
-    //   if (job["Status"] === "Complete" && sortedCompletedJobs.length > 0) {
-    //     job["Now At"] =
-    //       sortedCompletedJobs[sortedCompletedJobs.length - 1]["Work_Center"];
-    //   }
-    // }
 
     res.status(200).json({
       status: "success",
@@ -195,7 +174,8 @@ router.get("/now-at", async (req, res) => {
           Ship_Via,
           Shipped_Quantity,
           Quote,
-          Production_Status
+          Production_Status,
+          Numeric2
         FROM 
         (
           SELECT DISTINCT 
@@ -203,9 +183,10 @@ router.get("/now-at", async (req, res) => {
             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
             t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
-            t3.[Job_Plan], Part_Number, Customer, Status, Description, Order_Quantity, Promised_Quantity,
+            t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
-            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, U.Text5, t2.DeliveryKey
+            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
+            Numeric2
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
@@ -213,12 +194,22 @@ router.get("/now-at", async (req, res) => {
             LEFT JOIN
             (SELECT Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
               ON t1.User_Values = u.U_User_Values
+            
             LEFT JOIN
             (SELECT * FROM [General_Label].[dbo].[Delivery_Notes] ) AS t3 
               ON t1.Job = t3.Job 
               AND (t2.DeliveryKey = t3.DeliveryKey
               OR (t2.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
-            WHERE Status IN ('Active', 'Complete')
+
+              LEFT JOIN 
+              (SELECT User_Values, Customer FROM [Production].[dbo].[Customer]) as c
+              ON t1.Customer = c.Customer
+       
+              LEFT JOIN
+              (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
+              ON c.User_Values = u2.User_Values
+
+            WHERE t1.Status IN ('Active', 'Complete')
             ) a
         WHERE Ship_By_Date between :startDate and :endDate
         ORDER BY Ship_By_Date;
