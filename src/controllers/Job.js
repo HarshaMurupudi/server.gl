@@ -26,7 +26,8 @@ class JobController {
 
     const filteredJobs = [];
 
-    for (let cJob of [...jobs[0], ...[{ Job: "Test11" }]]) {
+    // for (let cJob of [...jobs[0], ...[{ Job: "Test11" }]]) {
+    for (let cJob of jobs[0]) {
       const { Job } = cJob;
       const filePath = isWin
         ? `\\\\gl-fs01\\GLIOrders\\${Job}\\`

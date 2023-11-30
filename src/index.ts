@@ -92,4 +92,4 @@ app.listen(PORT, () => {
   console.log(process.env.DB_NAME, "env");
 });
 
-// require("./tasks/folder")();
+require("./tasks/folder")();

@@ -1,3 +1,4 @@
+import { error } from "console";
 import fs from "fs";
 const path = require("path");
 

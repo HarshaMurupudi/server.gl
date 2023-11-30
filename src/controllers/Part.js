@@ -23,13 +23,12 @@ class PartController {
     );
 
     //all jobs that don't have folder
-
     const filteredJobs = [];
-
-    for (let cJob of [
-      ...jobs[0],
-      ...[{ Job: "Test11", Part_Number: "Testzzz" }],
-    ]) {
+    // for (let cJob of [
+    //   ...jobs[0],
+    //   ...[{ Job: "Test11", Part_Number: "Testzzzz" }],
+    // ]) {
+    for (let cJob of jobs[0]) {
       const { Job, Part_Number } = cJob;
       const filePath = isWin
         ? `\\\\gl-fs01\\GLIParts\\${Part_Number}\\`
