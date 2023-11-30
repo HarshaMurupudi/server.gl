@@ -1,8 +1,8 @@
 import Sequelize from 'sequelize';
 const { glNotesDB: db } = require('../../config/database');
 
-const TrainingNotes = db.define(
-  'Master_Training',
+const TrainingLogNotes = db.define(
+  'Training_Log',
   {
     Training_ID: {
       type: Sequelize.INTEGER,
@@ -15,14 +15,20 @@ const TrainingNotes = db.define(
     Trainer: {
       type: Sequelize.STRING,
     },
-    Training_Title: {
+    Employee_Name: {
         type: Sequelize.STRING,
       },
-    Training_Type: {
+    Training_Title: {
       type: Sequelize.STRING,
     },
-    Training_Description: {
+    Needs_Repeat: {
       type: Sequelize.STRING,
+    },
+    Repeat_After: {
+      type: Sequelize.STRING
+    },
+    Note: {
+      type: Sequelize.STRING
     }
   },
   {
@@ -32,8 +38,8 @@ const TrainingNotes = db.define(
 
     updatedAt: false,
 
-    tableName: 'Master_Training',
+    tableName: 'Training_Log',
   }
 );
 
-module.exports = TrainingNotes;
+module.exports = TrainingLogNotes;

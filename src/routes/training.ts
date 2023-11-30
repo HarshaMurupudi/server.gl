@@ -85,8 +85,9 @@ router.get("/training/employees", async (req, res) => {
             }
             res.status(200).json({
                 status: "success",
-                results: namesArray.length,
-                employees: namesArray,
+                results: employees[0].length,
+                names: namesArray,
+                employees: employees[0],
             });
         } else {
             res.status(200).json({
