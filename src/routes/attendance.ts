@@ -27,8 +27,7 @@ router.get("/attendance", async (req, res) => {
       (SELECT *
       FROM [General_Label].[dbo].[Attendance_Notes]) AS t3
       ON t1.Employee = t3.Employee AND t2.Login = t3.Login
-      WHERE t2.Login > dateadd(DAY, -1, GETDATE())
-      AND t2.Login < dateadd(DAY, 1, GETDATE())
+      WHERE CAST(t2.Login AS Date) = CAST( GETDATE() AS Date )
       `
     );
     if (attendance[0].length > 0 ) {
@@ -53,26 +52,3 @@ router.get("/attendance", async (req, res) => {
 });
 
 module.exports = router;
-
-// Attendance & Notes
-// SELECT * FROM [General_Label].[dbo].[Attendance_Notes] AS t1
-// LEFT JOIN
-// (SELECT Employee, Login, Logout
-// FROM [Production].[dbo].[Attendance]) AS t2
-// ON t1.Employee = t2.Employee
-// LEFT JOIN
-// (SELECT Employee, Status
-// FROM [Production].[dbo].[Employee]) AS t3
-// ON t2.Employee = t3.Employee
-// WHERE t2.Login > DATEADD(month, -2, getdate())
-// AND t3.Status = 'Active'
-// AND t1.Login = t2.Login
-//       `
-
-// LEFT JOIN
-//       (SELECT *
-//       FROM [General_Label].[dbo].[Attendance_Notes]) AS t3
-//       ON t2.Employee = t3.Employee
-//       WHERE t2.Login > DATEADD(month, -2, getdate())
-//       AND t1.Status = 'Active'
-//       AND t2.Login = t3.Login
