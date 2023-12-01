@@ -159,7 +159,6 @@ router.patch("/meeting/notes", async (req, res) => {
       Date = null,
       Meeting_Note = null,
     } of meetings) {
-      const values = { Description, Date, Meeting_Note };
       const obj = await MeetingNotes.findOne({
         where: { Meeting_Note_ID },
       });
@@ -172,7 +171,9 @@ router.patch("/meeting/notes", async (req, res) => {
       } else {
         MeetingNotes.create({
           Meeting_Note_ID,
-          values
+          Description,
+          Date,
+          Meeting_Note
         });
       }
     }
