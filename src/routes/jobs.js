@@ -811,6 +811,23 @@ router.get("/parts/latest", async (req, res) => {
   }
 });
 
+router.post("/parts/art/folder/:partNumber", async (req, res) => {
+  // try {
+  const { partNumber } = req.params;
+  await folderController.createArt(partNumber, res);
+
+  // res.status(200).json({
+  //   status: "success",
+  // });
+  // } catch (error) {
+  //   res.status(400).json({
+  //     status: "Error",
+  //     message: error.message,
+  //     code: error.code,
+  //   });
+  // }
+});
+
 router.post("/parts/folder/:partNumber", async (req, res) => {
   try {
     const { partNumber } = req.params;

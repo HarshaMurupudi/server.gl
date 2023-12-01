@@ -121,6 +121,72 @@ class FolderController {
       throw new Error("Folder already exists");
     }
   }
+  async createArt(partNumber, res) {
+    var isWin = process.platform === "win32";
+    const filePath = isWin
+      ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\Current\\Art\\`
+      : `/Volumes/GLIParts/${partNumber}/Current/Art/`;
+    const checkFilePath = isWin
+      ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\`
+      : `/Volumes/GLIParts/${partNumber}/`;
+
+    const structure = {
+      Approval: {},
+      Automation: {},
+      Customer: {},
+      Cutting: {
+        Dies: {},
+        Laser: {},
+        "Delta Laser": {},
+        Plotter: {},
+      },
+      Documents: {},
+      Film: {
+        Face: {},
+        Circuit: {},
+      },
+      DTS: {
+        Face: {},
+        Circuit: {},
+      },
+      Ref: {},
+    };
+
+    try {
+      if (fs.existsSync(checkFilePath)) {
+        await create(filePath, structure, (error) => {
+          if (error) {
+            console.log(error);
+            // throw new Error("Error in creating folders");
+            res.status(400).json({
+              status: "Error",
+              message: error.message,
+              code: error.code,
+            });
+          }
+          //  else console.log("Success");
+          else {
+            res.status(200).json({
+              status: "success",
+            });
+          }
+        });
+      } else {
+        // throw new Error("Folder not found!");
+        res.status(400).json({
+          status: "Error",
+          message: "Folder not found!",
+          code: error.code,
+        });
+      }
+    } catch (error) {
+      res.status(400).json({
+        status: "Error",
+        message: error.message,
+        code: error.code,
+      });
+    }
+  }
 }
 
 module.exports = new FolderController();
