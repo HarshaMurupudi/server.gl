@@ -19,6 +19,8 @@ const ShippingNotes = require("../models/notes/ShippingNotes");
 const InspectionNotes = require("../models/notes/InspectionNotes");
 const AttendanceNotes = require("../models/notes/AttendanceNotes");
 const MeetingNotes = require("../models/notes/MeetingNotes");
+const TrainingLogNotes = require("../models/notes/TrainingLogNotes");
+const TrainingNotes = require("../models/notes/TrainingNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -308,6 +310,113 @@ router.patch("/attendance/notes", async (req, res) => {
     });
   }
 });
+
+router.patch("/training/notes", async (req, res) => {
+  try {
+    const {
+      data: { training },
+    } = req.body;
+    for (const {
+      Training_ID,
+      Date = null,
+      Trainer = null,
+      Training_Title = null,
+      Training_Type = null,
+      Training_Description = null,
+    } of training ) {
+      const obj = await TrainingNotes.findOne({
+        where: { Training_ID },
+      });
+      if (obj) {
+        obj.update({
+          Date,
+          Trainer,
+          Training_Title,
+          Training_Type,
+          Training_Description
+        });
+      } else {
+        TrainingNotes.create({
+          Training_ID,
+          Date,
+          Trainer,
+          Training_Title,
+          Training_Type,
+          Training_Description
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+      message: training,
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/training/log", async (req, res) => {
+  try {
+    const {
+      data: { trainingLog },
+    } = req.body;
+    for (const {
+      Training_ID,
+      Date = null,
+      Trainer = null,
+      Employee_Name = null,
+      Department = null,
+      Training_Title = null,
+      Needs_Repeat = null,
+      Repeat_After = null,
+      Note = null
+    } of trainingLog) {
+      const obj = await TrainingLogNotes.findOne({
+        where: { Training_ID },
+      });
+      if (obj) {
+        obj.update({
+          Date,
+          Trainer,
+          Employee_Name,
+          Department,
+          Training_Title,
+          Needs_Repeat,
+          Repeat_After,
+          Note
+        });
+      } else {
+        TrainingLogNotes.create({
+          Training_ID,
+          Date,
+          Trainer,
+          Employee_Name,
+          Department,
+          Training_Title,
+          Needs_Repeat,
+          Repeat_After,
+          Note
+        });
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
 router.patch("/jobs/pending/notes", async (req, res) => {
   try {
     const {
