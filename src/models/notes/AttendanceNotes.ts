@@ -29,6 +29,9 @@ const AttendanceNotes = db.define(
     },
     Attendance_Note: {
       type: Sequelize.STRING
+    },
+    Note_Date: {
+      type: Sequelize.STRING
     }
   },
   {
