@@ -776,6 +776,60 @@ router.get("/jobs/latest", async (req, res) => {
   }
 });
 
+router.get("/jobs/onHold", async (req, res) => {
+  try {
+    const jobs = await glDB.query(
+      `
+      SELECT *, t1.Job, t2.DeliveryKey, (t2.Promised_Date - t1.Lead_Days - 2) AS Ship_By_Date 
+      FROM
+      (SELECT DISTINCT
+        Job,
+        Part_Number,
+        Status,
+        Sales_Rep,
+        Customer,
+        Quote,
+        Ship_Via,
+        Rev,
+        Description,
+        Order_Quantity,
+        Make_Quantity,
+        Shipped_Quantity,
+        Customer_PO,
+        Unit_Price,
+        Order_Date,
+        Status_Date,
+        Lead_Days
+      FROM [Production].[dbo].[Job]
+      WHERE Status = 'Hold') AS t1
+      LEFT JOIN
+      (SELECT
+        Job,
+        DeliveryKey,
+        Promised_Date
+      FROM [Production].[dbo].[Delivery]) AS t2
+      ON t1.Job = t2.Job
+      LEFT JOIN
+      (SELECT * FROM [General_Label].[dbo].[Hold_Notes]) AS t3
+      ON t1.Job = t3.Job
+      AND (t2.DeliveryKey = t3.DeliveryKey
+      OR (t2.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
+      `
+    );
+    res.status(200).json({
+      status: "success",
+      results: jobs[0].length,
+      contracts: jobs[0],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
 router.post("/jobs/folder/:job", async (req, res) => {
   try {
     const { job } = req.params;
