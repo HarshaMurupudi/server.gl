@@ -26,7 +26,7 @@ router.get("/jobsByVendor/:vendorName", async (req, res) => {
             WHERE Job IN 
             (
               SELECT DISTINCT(Job) FROM [Production].[dbo].[Job] 
-              WHERE Status IN ('Active', 'Hold', 'Complete', 'Pending'
+              WHERE Status IN ('Active', 'Complete'
             ))
             AND Status in  ('O', 'S')
             ;
@@ -52,7 +52,7 @@ router.get("/jobsByVendor/:vendorName", async (req, res) => {
           FROM (
             SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
             j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
-            jo.WC_Vendor, jo.Sequence,
+            jo.WC_Vendor, jo.Sequence, jo.Status AS JobOperationStatus,
             del.Promised_Date,
             Plan_Notes, t3.Priority,
             ROW_NUMBER() OVER (PARTITION BY
@@ -155,7 +155,7 @@ router.get("/vendor/open/:vendorName", async (req, res) => {
             AND jo.Vendor = t3.Vendor
             AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
           where 
-          j.status in ('Active','Hold', 'Pending', 'Complete') 
+          j.status in ('Active', 'Complete') 
           AND 
           jo.WC_Vendor = :vendor;
         `,
@@ -256,7 +256,7 @@ router.get("/vendor/open/:vendorName/now-at", async (req, res) => {
             AND jo.Vendor = t3.Vendor
             AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
           where 
-          j.status in ('Active','Hold', 'Pending', 'Complete') 
+          j.status in ('Active', 'Complete') 
           AND 
           jo.WC_Vendor = :vendor;
         `,
