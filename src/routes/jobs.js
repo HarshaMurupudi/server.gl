@@ -274,7 +274,7 @@ router.get("/now-at", async (req, res) => {
       // for all jobs get on hand quantity and sum
       // if material has value don't
 
-      if (!queriesPartList.includes(job.Part_Number)) {
+      // if (!queriesPartList.includes(job.Part_Number)) {
         const parts = await glDB.query(
           `
           SELECT 
@@ -285,11 +285,12 @@ router.get("/now-at", async (req, res) => {
           LEFT JOIN
           (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
           ON LOC.Material = mr.Material
-          WHERE LOC.Material = :partID;
+          WHERE LOC.Material = :partID  AND mr.Job = :jobID;
           `,
           {
             replacements: {
               partID: job.Part_Number,
+              jobID: job.Job
             },
             type: glDB.QueryTypes.SELECT,
           }
@@ -301,7 +302,7 @@ router.get("/now-at", async (req, res) => {
         }, 0);
         queriesPartList.push(job.Part_Number);
         job.On_Hand_Qty = total;
-      }
+      // }
 
       const jobsWithData = fJobs.filter((iJob) => {
         return iJob.Job == job.Job;
