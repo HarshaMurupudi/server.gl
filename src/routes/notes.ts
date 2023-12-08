@@ -21,6 +21,7 @@ const AttendanceNotes = require("../models/notes/AttendanceNotes");
 const MeetingNotes = require("../models/notes/MeetingNotes");
 const TrainingLogNotes = require("../models/notes/TrainingLogNotes");
 const TrainingNotes = require("../models/notes/TrainingNotes");
+const HoldNotes = require("../models/notes/HoldNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -434,6 +435,39 @@ router.patch("/jobs/pending/notes", async (req, res) => {
         const values = { Notes, Priority };
 
         await upsert(PendingJobsNotes, condition, values);
+      }
+    }
+
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/jobs/onHold/notes", async (req, res) => {
+  try {
+    const {
+      data: { jobs },
+    } = req.body;
+
+    for (const {
+      Job,
+      DeliveryKey = null,
+      Hold_Note = null,
+      Priority = null,
+    } of jobs) {
+      if (Job) {
+        const condition = { Job, DeliveryKey };
+        const values = { Hold_Note, Priority };
+
+        await upsert(HoldNotes, condition, values);
       }
     }
 
