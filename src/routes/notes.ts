@@ -272,20 +272,27 @@ router.patch("/attendance/notes", async (req, res) => {
       Login = null,
       Logout = null,
       Attendance_Note = null,
+      Note_Date = null,
     } of attendance) {
       const obj = await AttendanceNotes.findOne({
-        where: { Attendance_Note_ID },
+        where: { First_Name, Last_Name, Attendance_Note_ID },
       });
       if (obj) {
-        obj.update({
-          Employee,
-          First_Name,
-          Last_Name,
-          Status,
-          Login,
-          Logout,
-          Attendance_Note,
-        });
+        if (obj.Login == null && Login != null){
+          obj.update({
+            Login,
+          });
+        } else {
+          obj.update({
+            Employee,
+            First_Name,
+            Last_Name,
+            Status,
+            Login,
+            Logout,
+            Attendance_Note,
+          });
+        }
       } else {
         AttendanceNotes.create({
           Attendance_Note_ID,
@@ -296,6 +303,7 @@ router.patch("/attendance/notes", async (req, res) => {
           Login,
           Logout,
           Attendance_Note,
+          Note_Date,
         });
       }
     }

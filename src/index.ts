@@ -15,6 +15,7 @@ const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
 const attendance = require("./routes/attendance");
+const calendar = require("./routes/calendar");
 const meeting = require("./routes/meeting");
 const training = require("./routes/training");
 
@@ -71,6 +72,7 @@ app.use(operationTime);
 app.use(jobBoss);
 app.use(attendance);
 app.use(meeting);
+app.use(calendar);
 app.use(training);
 app.use(materialRequirements);
 
