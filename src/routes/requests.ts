@@ -1,6 +1,16 @@
 import express, { Request, Response } from "express";
 const router = express.Router();
 
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+const shopMSG = {
+  to: 'spencererie01@gmail.com', // Change to your recipient
+  from: 'spencererie01@gmail.com', // Change to your verified sender
+  subject: 'New Shop Request',
+  text: 'New Shop Request From: ',
+  html: '<strong>New Shop Request From: </strong>',
+}
+
 const { glDB } = require("../config/database");
 
 router.get("/requests/submit", async (req, res) => {
@@ -54,6 +64,34 @@ router.get("/requests/submit", async (req, res) => {
                 status:"success",
                 employees: [],
                 workCenters: [],            
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
+router.get("/requests/entries", async (req, res) => {
+    try {
+        const entries = await glDB.query(
+            `
+            SELECT *
+            FROM [General_Label].[dbo].[Shop_Request]
+            `,
+        );
+        if (entries.length > 0) {
+            res.status(200).json({
+                status: "success",
+                entries: entries[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                entries: [],           
             });
         }
     } catch (error: any) {

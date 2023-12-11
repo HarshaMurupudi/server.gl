@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 const router = express.Router();
 
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const Note = require("../models/Notes");
 
 const EngineeringNotes = require("../models/EngineeringNotes");
@@ -432,6 +435,7 @@ router.patch("/requests/shop", async (req, res) => {
     } = req.body;
     for (const {
       Request_ID,
+      Request_Type,
       Submission_Date = null,
       Status = null,
       Initiator = null,
@@ -445,7 +449,7 @@ router.patch("/requests/shop", async (req, res) => {
       Approval_Comment = null,
       Approval_Date = null
     } of form) {
-      const condition = { Request_ID };
+      const condition = { Request_ID, Request_Type };
       const values = { 
         Submission_Date,
         Status,
@@ -461,6 +465,45 @@ router.patch("/requests/shop", async (req, res) => {
         Approval_Date
       };
       await upsert(ShopRequest, condition, values);
+
+      const date = new Date()
+
+      var shopHTML = `
+          <h3>New Shop Request</h3>
+          <p>Initiator: ${Initiator}</p>
+          <p>Submission Date: ${date.toLocaleString()}</p>
+          <p>Subject: ${Subject}</p>
+          <p>Part Number: ${Part_Number}</p>
+          <p>Job Number: ${Job_Number}</p>
+          <p>Work Center: ${Work_Center}</p>
+          <p>Priority: ${Priority}</p>
+          <p>Request: ${Request}</p>
+      `;
+      
+      const msg = {
+        personalizations: [
+          {
+            "to": [
+              {
+                "email": "jerie@general-label.com"// "email": "sumitm@general-label.com"
+              },
+              {
+                "email": "spencererie01@gmail.com"
+              },
+            ]
+          }], // Change to your recipient
+        from: 'gliteam@general-label.com', // Change to your verified sender
+        subject: `New Shop Request`,
+        html: shopHTML,
+      }
+      sgMail
+        .send(msg)
+        .then(() => {
+          console.log('Email sent')
+        })
+        .catch((error: any) => {
+          console.error(error)
+        })
     }
 
     res.status(200).json({
@@ -484,6 +527,7 @@ router.patch("/requests/eco", async (req, res) => {
 
     for (const {
       Request_ID,
+      Request_Type,
       Submission_Date = null,
       Status = null,
       Initiator = null,
@@ -496,9 +540,10 @@ router.patch("/requests/eco", async (req, res) => {
       Request = null,
       Approver = null,
       Approval_Comment = null,
-      Approval_Date = null
+      Approval_Date = null,
+      Assigned_To = null,
     } of form) {
-      const condition = { Request_ID };
+      const condition = { Request_ID, Request_Type };
       const values = { 
         Submission_Date,
         Status,
@@ -512,7 +557,8 @@ router.patch("/requests/eco", async (req, res) => {
         Request,
         Approver,
         Approval_Comment,
-        Approval_Date
+        Approval_Date,
+        Assigned_To
       };
       await upsert(EcoRequest, condition, values);
     }
@@ -538,6 +584,7 @@ router.patch("/requests/maintenance", async (req, res) => {
 
     for (const {
       Request_ID,
+      Request_Type,
       Submission_Date = null,
       Status = null,
       Initiator = null,
@@ -549,7 +596,7 @@ router.patch("/requests/maintenance", async (req, res) => {
       Approval_Comment = null,
       Approval_Date = null
     } of form) {
-      const condition = { Request_ID };
+      const condition = { Request_ID, Request_Type };
       const values = { 
         Submission_Date,
         Status,
@@ -586,6 +633,7 @@ router.patch("/requests/improvement", async (req, res) => {
 
     for (const {
       Request_ID,
+      Request_Type,
       Submission_Date = null,
       Status = null,
       Initiator = null,
@@ -599,7 +647,7 @@ router.patch("/requests/improvement", async (req, res) => {
       Approval_Comment = null,
       Approval_Date = null
     } of form) {
-      const condition = { Request_ID };
+      const condition = { Request_ID, Request_Type };
       const values = { 
         Submission_Date,
         Status,
