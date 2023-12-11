@@ -15,8 +15,9 @@ const partNumber = require("./routes/partNumber");
 const operationTime = require("./routes/operationTime");
 const jobBoss = require("./routes/jobBoss");
 const attendance = require("./routes/attendance");
-const meeting = require("./routes/meeting")
 const calendar = require("./routes/calendar");
+const meeting = require("./routes/meeting");
+const training = require("./routes/training");
 
 // WC
 const circuitDepJobs = require("./routes/work-centers/circuitDepartment");
@@ -35,6 +36,8 @@ const printJobs = require("./routes/work-centers/print");
 // WC_Vendor
 const vendorJobs = require("./routes/work-centers/vendor");
 const materialRequirements = require("./routes/materialRequirement");
+
+// Tasks
 
 const PORT = process.env.PORT;
 
@@ -70,6 +73,7 @@ app.use(jobBoss);
 app.use(attendance);
 app.use(meeting);
 app.use(calendar);
+app.use(training);
 app.use(materialRequirements);
 
 // WC
@@ -91,3 +95,5 @@ app.listen(PORT, () => {
   console.log(`Server is up and listening on port ${PORT}`);
   console.log(process.env.DB_NAME, "env");
 });
+
+require("./tasks/folder")();
