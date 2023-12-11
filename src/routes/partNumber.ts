@@ -164,6 +164,7 @@ router.get("/part-number/:jobID/po/:count", async (req, res) => {
 router.get("/inventory/part-number/:partID", async (req, res) => {
   try {
     const { partID } = req.params;
+    const { jobID } = req.query;
 
     const parts = await glDB.query(
       `
@@ -175,7 +176,22 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
       ON LOC.Material = mr.Material
-      WHERE LOC.Material = :partID OR LOC.Material LIKE :partID + '[_]%';
+      WHERE LOC.Material = :partID AND mr.Job = :jobID;
+      `,
+      {
+        replacements: {
+          partID,
+          jobID,
+        },
+        type: glDB.QueryTypes.SELECT,
+      }
+    );
+
+    const allocatedJobs = await glDB.query(
+      `
+      SELECT Job, Est_Qty, Deferred_Qty, Due_Date FROM [Production].[dbo].[Material_Req] 
+		  WHERE Deferred_Qty > 0
+      and Material = :partID;
       `,
       {
         replacements: {
@@ -185,10 +201,23 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
       }
     );
 
+    const total = parts.reduce((sum: any, item: { On_Hand_Qty: any }) => {
+      sum = sum + item.On_Hand_Qty;
+      return sum;
+    }, 0);
+
+    const allocatedTotal = allocatedJobs.reduce(
+      (sum: any, item: { Deferred_Qty: any }) => {
+        sum = sum + item.Deferred_Qty;
+        return sum;
+      },
+      0
+    );
+
     res.status(200).json({
       status: "success",
       result: parts.length,
-      parts: parts,
+      inventory: { parts, allocatedJobs, onHandSum: total, allocatedTotal },
     });
   } catch (error: any) {
     console.log(error);
