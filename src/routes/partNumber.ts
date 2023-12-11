@@ -187,15 +187,37 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
       }
     );
 
+    const allocatedJobs = await glDB.query(
+      `
+      SELECT Job, Est_Qty, Deferred_Qty, Due_Date FROM [Production].[dbo].[Material_Req] 
+		  WHERE Deferred_Qty > 0
+      and Material = :partID;
+      `,
+      {
+        replacements: {
+          partID,
+        },
+        type: glDB.QueryTypes.SELECT,
+      }
+    );
+
     const total = parts.reduce((sum: any, item: { On_Hand_Qty: any }) => {
       sum = sum + item.On_Hand_Qty;
       return sum;
     }, 0);
 
+    const allocatedTotal = allocatedJobs.reduce(
+      (sum: any, item: { Deferred_Qty: any }) => {
+        sum = sum + item.Deferred_Qty;
+        return sum;
+      },
+      0
+    );
+
     res.status(200).json({
       status: "success",
       result: parts.length,
-      inventory: { parts, onHandSum: total },
+      inventory: { parts, allocatedJobs, onHandSum: total, allocatedTotal },
     });
   } catch (error: any) {
     console.log(error);
