@@ -166,17 +166,19 @@ router.get("/inventory/part-number/:partID", async (req, res) => {
     const { partID } = req.params;
     const { jobID } = req.query;
 
-    const parts = await glDB.query(
+    let parts = [];
+
+    parts = await glDB.query(
       `
       SELECT 
-      LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
+      DISTINCT LOC.Material, Location_ID, Lot, On_Hand_Qty, MAT.Description FROM [Production].[dbo].[Material_Location] AS LOC
       INNER JOIN
       (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
       ON LOC.Material = MAT.Material
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
       ON LOC.Material = mr.Material
-      WHERE LOC.Material = :partID AND mr.Job = :jobID;
+      WHERE LOC.Material = :partID;
       `,
       {
         replacements: {
