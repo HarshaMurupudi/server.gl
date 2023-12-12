@@ -44,6 +44,9 @@ const ImprovementRequest = db.define(
     },
     Approval_Date: {
       type: Sequelize.STRING
+    },
+    Request_Type: {
+      type: Sequelize.STRING
     }
 
   },

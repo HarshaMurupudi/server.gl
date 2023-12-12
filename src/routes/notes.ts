@@ -462,50 +462,54 @@ router.patch("/requests/shop", async (req, res) => {
         Request,
         Approver,
         Approval_Comment,
-        Approval_Date
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
+
       await upsert(ShopRequest, condition, values);
-
-      const date = new Date()
-
-      var shopHTML = `
-          <h3>New Shop Request</h3>
-          <p>Initiator: ${Initiator}</p>
-          <p>Submission Date: ${date.toLocaleString()}</p>
-          <p>Subject: ${Subject}</p>
-          <p>Part Number: ${Part_Number}</p>
-          <p>Job Number: ${Job_Number}</p>
-          <p>Work Center: ${Work_Center}</p>
-          <p>Priority: ${Priority}</p>
-          <p>Request: ${Request}</p>
-      `;
       
-      const msg = {
-        personalizations: [
-          {
-            "to": [
-              {
-                "email": "jerie@general-label.com"// "email": "sumitm@general-label.com"
-              },
-              {
-                "email": "spencererie01@gmail.com"
-              },
-            ]
-          }], // Change to your recipient
-        from: 'gliteam@general-label.com', // Change to your verified sender
-        subject: `New Shop Request`,
-        html: shopHTML,
-      }
-      sgMail
-        .send(msg)
-        .then(() => {
-          console.log('Email sent')
-        })
-        .catch((error: any) => {
-          console.error(error)
-        })
-    }
+      if (false) {
+        const date = new Date()
 
+        var shopHTML = `
+            <h3>New Shop Request</h3>
+            <p>Initiator: ${Initiator}</p>
+            <p>Submission Date: ${date.toLocaleString()}</p>
+            <p>Subject: ${Subject}</p>
+            <p>Part Number: ${Part_Number}</p>
+            <p>Job Number: ${Job_Number}</p>
+            <p>Work Center: ${Work_Center}</p>
+            <p>Priority: ${Priority}</p>
+            <p>Request: ${Request}</p>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "jerie@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Shop Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
     res.status(200).json({
       status: "success",
     });
@@ -561,8 +565,49 @@ router.patch("/requests/eco", async (req, res) => {
         Assigned_To
       };
       await upsert(EcoRequest, condition, values);
-    }
 
+      if (!Request_ID) {
+        const date = new Date()
+
+        var shopHTML = `
+            <h2>ECO Request</h2>
+            <p>Initiator: ${Initiator}</p>
+            <p>Submission Date: ${date.toLocaleString()}</p>
+            <p>Subject: ${Subject}</p>
+            <p>ECO Type: ${Eco_Type}</p>
+            <p>Part Number: ${Part_Number}</p>
+            <p>Job Number: ${Job_Number}</p>
+            <p>Work Center: ${Work_Center}</p>
+            <p>Priority: ${Priority}</p>
+            <p>Status: ${Status}</p>
+            <p>Request: ${Request}</p>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": Assigned_To
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New ECO Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
     res.status(200).json({
       status: "success",
     });
@@ -610,8 +655,48 @@ router.patch("/requests/maintenance", async (req, res) => {
         Approval_Date
       };
       await upsert(MaintenanceRequest, condition, values);
-    }
 
+      if (!Request_ID) {
+        const date = new Date()
+
+        var shopHTML = `
+            <h2>Maintenance Request</h2>
+            <p>Initiator: ${Initiator}</p>
+            <p>Date: ${date.toLocaleString()}</p>
+            <p>Subject: ${Subject}</p>
+            <p>Work Center: ${Work_Center}</p>
+            <p>Priority: ${Priority}</p>
+            <p>Maintenance Request: ${Request}</p>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "jason@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Maintenance Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
     res.status(200).json({
       status: "success",
     });
@@ -663,8 +748,49 @@ router.patch("/requests/improvement", async (req, res) => {
         Approval_Date
       };
       await upsert(ImprovementRequest, condition, values);
-    }
+      if (!Request_ID) {
+        const date = new Date()
 
+        var shopHTML = `
+            <h3>New Shop Request</h3>
+            <p>Initiator: ${Initiator}</p>
+            <p>Submission Date: ${date.toLocaleString()}</p>
+            <p>Subject: ${Subject}</p>
+            <p>Part Number: ${Part_Number}</p>
+            <p>Job Number: ${Job_Number}</p>
+            <p>Work Center: ${Work_Center}</p>
+            <p>Priority: ${Priority}</p>
+            <p>Request: ${Request}</p>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "nate@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Shop Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
     res.status(200).json({
       status: "success",
     });

@@ -77,16 +77,44 @@ router.get("/requests/submit", async (req, res) => {
 
 router.get("/requests/entries", async (req, res) => {
     try {
-        const entries = await glDB.query(
+        const shopArray = await glDB.query(
             `
-            SELECT *
+            SELECT * 
             FROM [General_Label].[dbo].[Shop_Request]
             `,
         );
+        const maintenanceArray = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Maintenance_Request]
+            `,
+        );
+        const improvementArray = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Improvement_Request]
+            `,
+        );
+        const EcoArray = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Eco_Request]
+            `,
+        );
+
+        maintenanceArray[0].forEach((obj: any) => {
+            if (obj !== null){
+                obj.Part_Number = null;
+                obj.Job_Number = null;
+            }
+          });
+
+        const entries = shopArray[0].concat(maintenanceArray[0]).concat(improvementArray[0]);
+
         if (entries.length > 0) {
             res.status(200).json({
                 status: "success",
-                entries: entries[0],
+                entries: entries,
             });
         } else {
             res.status(200).json({
