@@ -418,9 +418,11 @@ router.get("/job-image/:jobID", async (req, res) => {
 router.get("/jobs", async (req, res) => {
   try {
     const jobs = await JobModel.findAll({
-      where: {...req.query, Status: {
-        [Op.not]: 'Hold'
-      }},
+      where: {...req.query, 
+        // Status: {
+        // [Op.not]: 'Hold'
+      // }
+    },
       include: [
         {
           model: Delivery,
@@ -449,9 +451,11 @@ router.get("/jobs", async (req, res) => {
 router.get("/jobs/on-hand-qty", async (req, res) => {
   try {
     const oJobs = await JobModel.findAll({
-      where: {...req.query, Status: {
-        [Op.not]: 'Hold'
-      }},
+      where: {...req.query, 
+      //   Status: {
+      //   [Op.not]: 'Hold'
+      // }
+    },
       include: [
         {
           model: Delivery,
