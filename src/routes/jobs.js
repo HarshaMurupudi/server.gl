@@ -275,33 +275,33 @@ router.get("/now-at", async (req, res) => {
       // if material has value don't
 
       // if (!queriesPartList.includes(job.Part_Number)) {
-        const parts = await glDB.query(
-          `
+      const parts = await glDB.query(
+        `
           SELECT 
-          LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
+          DISTINCT LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
           INNER JOIN
           (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
           ON LOC.Material = MAT.Material
           LEFT JOIN
           (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
           ON LOC.Material = mr.Material
-          WHERE LOC.Material = :partID  AND mr.Job = :jobID;
+          WHERE LOC.Material = :partID;
           `,
-          {
-            replacements: {
-              partID: job.Part_Number,
-              jobID: job.Job
-            },
-            type: glDB.QueryTypes.SELECT,
-          }
-        );
+        {
+          replacements: {
+            partID: job.Part_Number,
+            jobID: job.Job,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
 
-        const total = parts.reduce((sum, item) => {
-          sum = sum + item.On_Hand_Qty;
-          return sum;
-        }, 0);
-        queriesPartList.push(job.Part_Number);
-        job.On_Hand_Qty = total;
+      const total = parts.reduce((sum, item) => {
+        sum = sum + item.On_Hand_Qty;
+        return sum;
+      }, 0);
+      queriesPartList.push(job.Part_Number);
+      job.On_Hand_Qty = total;
       // }
 
       const jobsWithData = fJobs.filter((iJob) => {
@@ -418,7 +418,9 @@ router.get("/job-image/:jobID", async (req, res) => {
 router.get("/jobs", async (req, res) => {
   try {
     const jobs = await JobModel.findAll({
-      where: req.query,
+      where: {...req.query, Status: {
+        [Op.not]: 'Hold'
+      }},
       include: [
         {
           model: Delivery,
@@ -429,6 +431,73 @@ router.get("/jobs", async (req, res) => {
         },
       ],
     });
+
+    res.status(200).json({
+      status: "success",
+      results: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/jobs/on-hand-qty", async (req, res) => {
+  try {
+    const oJobs = await JobModel.findAll({
+      where: {...req.query, Status: {
+        [Op.not]: 'Hold'
+      }},
+      include: [
+        {
+          model: Delivery,
+          required: false,
+          where: {
+            // Packlist: null,
+          },
+        },
+      ],
+    });
+
+    const jobs  = oJobs.map(el => el.get({ plain: true }));
+    
+
+    for (const job of jobs) {
+      const parts = await glDB.query(
+        `
+          SELECT 
+          DISTINCT LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description FROM [Production].[dbo].[Material_Location] AS LOC
+          INNER JOIN
+          (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
+          ON LOC.Material = MAT.Material
+          LEFT JOIN
+          (SELECT * FROM [Production].[dbo].[Material_Req] WHERE Deferred_Qty > 0) AS mr
+          ON LOC.Material = mr.Material
+          WHERE LOC.Material = :partID;
+          `,
+        {
+          replacements: {
+            partID: job.Part_Number,
+            jobID: job.Job,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+    //console.log(parts)
+
+      const total = parts.reduce((sum, item) => {
+        sum = sum + item.On_Hand_Qty;
+        return sum;
+      }, 0);
+    
+      job.On_Hand_Qty = total;
+    }
+    
 
     res.status(200).json({
       status: "success",
