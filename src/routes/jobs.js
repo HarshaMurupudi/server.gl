@@ -278,7 +278,7 @@ router.get("/now-at", async (req, res) => {
       const parts = await glDB.query(
         `
           SELECT 
-          DISTINCT LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description, mr.Job FROM [Production].[dbo].[Material_Location] AS LOC
+          DISTINCT LOC.Material, Location_ID, Lot, On_Hand_Qty, Deferred_Qty AS Allocated_Qty, MAT.Description FROM [Production].[dbo].[Material_Location] AS LOC
           INNER JOIN
           (SELECT Description, Material FROM [Production].[dbo].[Material]) AS MAT
           ON LOC.Material = MAT.Material
