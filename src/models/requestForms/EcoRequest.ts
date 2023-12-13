@@ -50,6 +50,9 @@ const EcoRequest = db.define(
     },
     Request_Type: {
       type: Sequelize.STRING
+    },
+    Assigned_To: {
+      type: Sequelize.STRING
     }
 
   },

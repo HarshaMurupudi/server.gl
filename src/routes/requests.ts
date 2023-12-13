@@ -95,12 +95,6 @@ router.get("/requests/entries", async (req, res) => {
             FROM [General_Label].[dbo].[Improvement_Request]
             `,
         );
-        const EcoArray = await glDB.query(
-            `
-            SELECT * 
-            FROM [General_Label].[dbo].[Eco_Request]
-            `,
-        );
 
         maintenanceArray[0].forEach((obj: any) => {
             if (obj !== null){
@@ -120,6 +114,34 @@ router.get("/requests/entries", async (req, res) => {
             res.status(200).json({
                 status:"success",
                 entries: [],           
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
+router.get("/requests/eco", async (req, res) => {
+    try {
+        const eco = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Eco_Request]
+            `,
+        );
+        if (eco.length > 0) {
+            res.status(200).json({
+                status: "success",
+                eco: eco[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                eco: [],           
             });
         }
     } catch (error: any) {

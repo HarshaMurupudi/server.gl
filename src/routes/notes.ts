@@ -467,7 +467,7 @@ router.patch("/requests/shop", async (req, res) => {
 
       await upsert(ShopRequest, condition, values);
       
-      if (false) {
+      if (!Request_ID) {
         const date = new Date()
 
         var shopHTML = `
@@ -532,6 +532,7 @@ router.patch("/requests/eco", async (req, res) => {
     for (const {
       Request_ID,
       Request_Type,
+      Assigned_To = null,
       Submission_Date = null,
       Status = null,
       Initiator = null,
@@ -545,11 +546,11 @@ router.patch("/requests/eco", async (req, res) => {
       Approver = null,
       Approval_Comment = null,
       Approval_Date = null,
-      Assigned_To = null,
     } of form) {
       const condition = { Request_ID, Request_Type };
       const values = { 
         Submission_Date,
+        Assigned_To,
         Status,
         Initiator,
         Subject,
@@ -559,36 +560,47 @@ router.patch("/requests/eco", async (req, res) => {
         Eco_Type,
         Priority,
         Request,
-        Approver,
+        Approver: Status === "Completed" && !Approver ? Assigned_To : Approver,
         Approval_Comment,
-        Approval_Date,
-        Assigned_To
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
+      console.log(Assigned_To);
       await upsert(EcoRequest, condition, values);
 
-      if (!Request_ID) {
-        const date = new Date()
+      const date = new Date()
+      var shopHTML = `
+          <h2>ECO Request</h2>
+          <p>Initiator: ${Initiator}</p>
+          <p>Submission Date: ${date.toLocaleString()}</p>
+          <p>Subject: ${Subject}</p>
+          <p>ECO Type: ${Eco_Type}</p>
+          <p>Part Number: ${Part_Number}</p>
+          <p>Job Number: ${Job_Number}</p>
+          <p>Work Center: ${Work_Center}</p>
+          <p>Priority: ${Priority}</p>
+          <p>Status: ${Status}</p>
+          <p>Request: ${Request}</p>
+      `;
 
-        var shopHTML = `
-            <h2>ECO Request</h2>
-            <p>Initiator: ${Initiator}</p>
-            <p>Submission Date: ${date.toLocaleString()}</p>
-            <p>Subject: ${Subject}</p>
-            <p>ECO Type: ${Eco_Type}</p>
-            <p>Part Number: ${Part_Number}</p>
-            <p>Job Number: ${Job_Number}</p>
-            <p>Work Center: ${Work_Center}</p>
-            <p>Priority: ${Priority}</p>
-            <p>Status: ${Status}</p>
-            <p>Request: ${Request}</p>
-        `;
+      var approvalHTML = `
+        <h2>Assigned ECO</h2>
+        <p>Initiator: ${Initiator}</p>
+        <p>Submission Date: ${date.toLocaleString()}</p>
+        <p>Subject: ${Subject}</p>
+        <p>ECO Type: ${Eco_Type}</p>
+        <p>Part Number: ${Part_Number}</p>
+        <p>Job Number: ${Job_Number}</p>
+        <p>Work Center: ${Work_Center}</p>
+        <p>Priority: ${Priority}</p>
+        <p>Status: ${Status}</p>
+        <p>Request: ${Request}</p>
+      `;
+
+      if (!Request_ID) {
         const msg = {
           personalizations: [
             {
               "to": [
-                {
-                  "email": Assigned_To
-                },
                 {
                   "email": "sumitm@general-label.com"
                 },
@@ -597,6 +609,28 @@ router.patch("/requests/eco", async (req, res) => {
           from: 'gliteam@general-label.com', // Change to your verified sender
           subject: `New ECO Request`,
           html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      } else if (Status === "Pending" && Assigned_To){
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": Assigned_To
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `New ECO Assignment`,
+          html: approvalHTML,
         }
         sgMail
           .send(msg)
@@ -652,7 +686,7 @@ router.patch("/requests/maintenance", async (req, res) => {
         Request,
         Approver,
         Approval_Comment,
-        Approval_Date
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
       await upsert(MaintenanceRequest, condition, values);
 
@@ -745,7 +779,7 @@ router.patch("/requests/improvement", async (req, res) => {
         Request,
         Approver,
         Approval_Comment,
-        Approval_Date
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
       await upsert(ImprovementRequest, condition, values);
       if (!Request_ID) {
