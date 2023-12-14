@@ -580,7 +580,7 @@ router.patch("/requests/eco", async (req, res) => {
           <p>Priority: ${Priority}</p>
           <p>Status: ${Status}</p>
           <p>Request: ${Request}</p>
-          <a href="http://localhost:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+          <a href="http://10.0.0.177:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
       `;
 
       var approvalHTML = `
@@ -595,7 +595,7 @@ router.patch("/requests/eco", async (req, res) => {
         <p>Priority: ${Priority}</p>
         <p>Status: ${Status}</p>
         <p>Request: ${Request}</p>
-        <a href="http://localhost:3000/eco" target="_blank">Create ECO</a>
+        <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
       `;
 
       if (!Request_ID) {
