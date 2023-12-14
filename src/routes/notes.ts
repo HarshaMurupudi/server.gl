@@ -568,7 +568,7 @@ router.patch("/requests/eco", async (req, res) => {
       await upsert(EcoRequest, condition, values);
 
       const date = new Date()
-      var shopHTML = `
+      var ecoHTML = `
           <h2>ECO Request</h2>
           <p>Initiator: ${Initiator}</p>
           <p>Submission Date: ${date.toLocaleString()}</p>
@@ -580,6 +580,7 @@ router.patch("/requests/eco", async (req, res) => {
           <p>Priority: ${Priority}</p>
           <p>Status: ${Status}</p>
           <p>Request: ${Request}</p>
+          <a href="http://localhost:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
       `;
 
       var approvalHTML = `
@@ -594,6 +595,7 @@ router.patch("/requests/eco", async (req, res) => {
         <p>Priority: ${Priority}</p>
         <p>Status: ${Status}</p>
         <p>Request: ${Request}</p>
+        <a href="http://localhost:3000/eco" target="_blank">Create ECO</a>
       `;
 
       if (!Request_ID) {
@@ -602,13 +604,13 @@ router.patch("/requests/eco", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "sumitm@general-label.com"
+                  "email": "spencererie01@gmail.com"// "email": "sumitm@general-label.com"
                 },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
           subject: `New ECO Request`,
-          html: shopHTML,
+          html: ecoHTML,
         }
         sgMail
           .send(msg)
