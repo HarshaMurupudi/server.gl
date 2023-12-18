@@ -5,24 +5,25 @@ var exec = require("child_process").execFile;
 const router = express.Router();
 
 const { glDB } = require("../config/database");
+const auth = require("../middleware/auth");
 
 const EXE_PATH = path.join(
   __dirname,
   "../services/MaintainOperationsClass/ConsoleWCMaintainanceApp.exe"
 );
 
-var opt = function (method: string, arg1: string, arg2: string) {
-  exec(EXE_PATH, [method, arg1, arg2], function (err: any, data: any) {
-    console.log(err);
+var opt = function (method: string, arg1: string, arg2: string, id: any) {
+  exec(EXE_PATH, [method, arg1, arg2, id], function (err: any, data: any) {
+    console.log(err, "response", data);
     // console.log(data.toString());
   });
 };
 
-router.get("/jobBoss/:jobID/:status", async (req: Request, res: Response) => {
+router.get("/jobBoss/:jobID/:status", [auth], async (req: any, res: Response) => {
   try {
     const { jobID, status } = req.params;
 
-    opt("SetJobStatus", jobID, status);
+    opt("SetJobStatus", jobID, status, req.user.id);
 
     res.status(200).json({
       status: "success",

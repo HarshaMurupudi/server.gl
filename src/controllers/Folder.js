@@ -39,7 +39,9 @@ class FolderController {
 
     const structure = {
       [job]: {
-        Contracts: {},
+        Contracts: {
+          History: {},
+        },
         Quality: {},
         Reports: {},
       },

@@ -7,9 +7,9 @@ import {
 } from "../controllers";
 
 module.exports = () => {
-  cron.schedule("0 0 */1 * * *", async function () {
+  cron.schedule("*/10 * * * * *", async function () {
     console.log("---------------------");
-    console.log("Checking for new jobs every 1hr");
+    console.log("Checking for new jobs every 10 seconds");
 
     // get all new jobs with no folders
     const jobs = await jobController.getLatestJobs();
