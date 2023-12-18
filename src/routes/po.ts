@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import fs from "fs";
 const router = express.Router();
 
+import auth from "../middleware/auth";
 const { glDB } = require("../config/database");
 
 router.get("/po", async (req: Request, res: Response) => {
@@ -48,26 +49,33 @@ router.get("/po", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/po-details/:jobID", async (req: Request, res: Response) => {
+router.get("/po-details/:jobID", [auth], async (req: any, res: Response) => {
   try {
+
     // const { jobID } = req.params;
     const { jobID } = req.params;
 
     const po = await glDB.query(
       `
       SELECT
-        j.Customer, c.Contact_Name,
+        j.Job, j.Customer, c.Contact_Name,
         a.Name, a.Line1, a.Line2, a.City, a.State, a.Zip, a.Country,
         ph.Ship_Via, 
-        j.Lead_Days, Customer_PO, j.Job, Part_Number, Rev, j.Status,
+        j.Lead_Days, Customer_PO, Part_Number, Rev, j.Status,
         Order_Quantity,
-        Requested_Date, Promised_Date,
         Promised_Quantity,
-        j.Unit_Price
+        j.Unit_Price,
+        j.Unit_Price * Order_Quantity AS Revenue,
+        Act_NRE_Charges,
+        Est_NRE_Charges,
+        Requested_Date, Promised_Date
       FROM [Production].[dbo].[Job] AS j
       LEFT JOIN
       (SELECT * from [Production].[dbo].[Packlist_Detail]) as pd
       on pd.Job = j.Job
+      LEFT JOIN(SELECT Job, Act_Price AS Act_NRE_Charges, Est_Price AS Est_NRE_Charges 
+        FROM [Production].[dbo].[Additional_Charge]) AS ac  
+        ON j.Job = ac.Job  
       LEFT JOIN 
       (SELECT *  FROM [Production].[dbo].[Delivery]) AS d ON j.Job = d.Job
       LEFT JOIN
@@ -78,7 +86,7 @@ router.get("/po-details/:jobID", async (req: Request, res: Response) => {
       on j.Contact = c.Contact
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Address]) as a
-      on c.Address = a.Address
+      on ph.Ship_To = a.Address
       WHERE j.Job=:jobID
       `,
       {
