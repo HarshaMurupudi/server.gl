@@ -578,7 +578,6 @@ router.get("/jobs/pending/quantity", async (req, res) => {
     );
 
     const queriesPartList = [];
-    console.log(jobs);
 
     for (const job of jobs[0]) {
       if (!queriesPartList.includes(job.Part_Number)) {
