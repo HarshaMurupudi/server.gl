@@ -471,16 +471,24 @@ router.patch("/requests/shop", async (req, res) => {
         const date = new Date()
 
         var shopHTML = `
-            <h3>New Shop Request</h3>
-            <p>Initiator: ${Initiator}</p>
-            <p>Submission Date: ${date.toLocaleString()}</p>
-            <p>Subject: ${Subject}</p>
-            <p>Part Number: ${Part_Number}</p>
-            <p>Job Number: ${Job_Number}</p>
-            <p>Work Center: ${Work_Center}</p>
-            <p>Priority: ${Priority}</p>
-            <p>Request: ${Request}</p>
+        <div class="shop-request">
+          <h3>New Shop Request</h3>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
         `;
+
         const msg = {
           personalizations: [
             {
@@ -562,18 +570,28 @@ router.patch("/requests/safety", async (req, res) => {
         const date = new Date()
 
         var safetyHTML = `
+          <div class="safety-report">
             <h3>Safety Report</h3>
-            <p>Initiator: ${Initiator}</p>
-            <p>Submission Date: ${date.toLocaleString()}</p>
-            <p>Subject: ${Subject}</p>
-            <p>Work Center: ${Work_Center}</p>
-            <p>Priority: ${Priority}</p>
-            <p>Request: ${Request}</p>
+            <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+            </ul>
+              <div class="report-details">
+                  <p><strong>Report Description:</strong></p>
+                  <p>${Request}</p>
+              </div>
+           </div>
         `;
         const msg = {
           personalizations: [
             {
               "to": [ // Susan, Nate, Jason, Sumit
+                // {
+                //   "email": "sumitm@general-label.com"
+                // },
                 {
                   "email": "spencererie01@gmail.com"
                 },
@@ -652,33 +670,47 @@ router.patch("/requests/eco", async (req, res) => {
 
       const date = new Date()
       var ecoHTML = `
-          <h2>ECO Request</h2>
-          <p>Initiator: ${Initiator}</p>
-          <p>Submission Date: ${date.toLocaleString()}</p>
-          <p>Subject: ${Subject}</p>
-          <p>ECO Type: ${Eco_Type}</p>
-          <p>Part Number: ${Part_Number}</p>
-          <p>Job Number: ${Job_Number}</p>
-          <p>Work Center: ${Work_Center}</p>
-          <p>Priority: ${Priority}</p>
-          <p>Status: ${Status}</p>
-          <p>Request: ${Request}</p>
-          <a href="http://10.0.0.177:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+      <div class="eco-request">
+        <h2>ECO Request</h2>
+        <ul>
+            <li><strong>Initiator:</strong> ${Initiator}</li>
+            <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+            <li><strong>Subject:</strong> ${Subject}</li>
+            <li><strong>ECO Type:</strong> ${Eco_Type}</li>
+            <li><strong>Part Number:</strong> ${Part_Number}</li>
+            <li><strong>Job Number:</strong> ${Job_Number}</li>
+            <li><strong>Work Center:</strong> ${Work_Center}</li>
+            <li><strong>Priority:</strong> ${Priority}</li>
+            <li><strong>Status:</strong> ${Status}</li>
+        </ul>
+        <div class="request-details">
+            <p><strong>Request:</strong></p>
+            <p>${Request}</p>
+        </div>
+        <a href="http://10.0.0.177:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+      </div>
       `;
 
       var approvalHTML = `
-        <h2>Assigned ECO</h2>
-        <p>Initiator: ${Initiator}</p>
-        <p>Submission Date: ${date.toLocaleString()}</p>
-        <p>Subject: ${Subject}</p>
-        <p>ECO Type: ${Eco_Type}</p>
-        <p>Part Number: ${Part_Number}</p>
-        <p>Job Number: ${Job_Number}</p>
-        <p>Work Center: ${Work_Center}</p>
-        <p>Priority: ${Priority}</p>
-        <p>Status: ${Status}</p>
-        <p>Request: ${Request}</p>
-        <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
+        <div class="assigned-eco">
+          <h2>Assigned ECO</h2>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>ECO Type:</strong> ${Eco_Type}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+              <li><strong>Status:</strong> ${Status}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+          <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
+        </div>
       `;
 
       if (!Request_ID) {
@@ -778,15 +810,23 @@ router.patch("/requests/maintenance", async (req, res) => {
       if (!Request_ID) {
         const date = new Date()
 
-        var shopHTML = `
-            <h2>Maintenance Request</h2>
-            <p>Initiator: ${Initiator}</p>
-            <p>Date: ${date.toLocaleString()}</p>
-            <p>Subject: ${Subject}</p>
-            <p>Work Center: ${Work_Center}</p>
-            <p>Priority: ${Priority}</p>
-            <p>Maintenance Request: ${Request}</p>
+        var maintenanceHTML = `
+        <div class="maintenance-request">
+          <h2>Maintenance Request</h2>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Maintenance Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
         `;
+
         const msg = {
           personalizations: [
             {
@@ -804,7 +844,7 @@ router.patch("/requests/maintenance", async (req, res) => {
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
           subject: `New Maintenance Request`,
-          html: shopHTML,
+          html: maintenanceHTML,
         }
         sgMail
           .send(msg)
@@ -871,15 +911,22 @@ router.patch("/requests/improvement", async (req, res) => {
         const date = new Date()
 
         var shopHTML = `
-            <h3>New Shop Request</h3>
-            <p>Initiator: ${Initiator}</p>
-            <p>Submission Date: ${date.toLocaleString()}</p>
-            <p>Subject: ${Subject}</p>
-            <p>Part Number: ${Part_Number}</p>
-            <p>Job Number: ${Job_Number}</p>
-            <p>Work Center: ${Work_Center}</p>
-            <p>Priority: ${Priority}</p>
-            <p>Request: ${Request}</p>
+        <div class="new-improvement-request">
+          <h3>New Improvement Request</h3>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
         `;
         const msg = {
           personalizations: [
@@ -897,7 +944,7 @@ router.patch("/requests/improvement", async (req, res) => {
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
-          subject: `New Shop Request`,
+          subject: `New Improvement Request`,
           html: shopHTML,
         }
         sgMail

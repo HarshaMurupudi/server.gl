@@ -21,9 +21,6 @@ const SafetyRequest = db.define(
     Subject: {
       type: Sequelize.STRING,
     },
-    Job_Number: {
-      type: Sequelize.STRING,
-    },
     Work_Center: {
       type: Sequelize.STRING,
     },

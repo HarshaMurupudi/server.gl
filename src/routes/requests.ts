@@ -109,7 +109,14 @@ router.get("/requests/entries", async (req, res) => {
             }
           });
 
-        const entries = shopArray[0].concat(maintenanceArray[0]).concat(improvementArray[0]);
+        safetyArray[0].forEach((obj: any) => {
+        if (obj !== null){
+            obj.Part_Number = null;
+            obj.Job_Number = null;
+        }
+        });
+
+        const entries = shopArray[0].concat(maintenanceArray[0]).concat(improvementArray[0]).concat(safetyArray[0]);
 
         if (entries.length > 0) {
             res.status(200).json({
