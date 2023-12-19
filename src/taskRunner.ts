@@ -39,7 +39,7 @@ const materialRequirements = require("./routes/materialRequirement");
 
 // Tasks
 
-const PORT = process.env.PORT;
+const PORT = process.env.AUTOMATE_PORT;
 
 glDB
   .authenticate()
@@ -96,4 +96,4 @@ app.listen(PORT, () => {
   console.log(process.env.DB_NAME, "env");
 });
 
-// require("./tasks/folder")();
+require("./tasks/folder")();
