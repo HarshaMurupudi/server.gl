@@ -58,10 +58,10 @@ router.get("/po-details/:jobID", [auth], async (req: any, res: Response) => {
     const po = await glDB.query(
       `
       SELECT
-        j.Job, j.Customer, c.Contact_Name,
+        j.Job, Part_Number, j.Customer, c.Contact_Name,
         a.Name, a.Line1, a.Line2, a.City, a.State, a.Zip, a.Country,
         ph.Ship_Via, 
-        j.Lead_Days, Customer_PO, Part_Number, Rev, j.Status,
+        j.Lead_Days, Customer_PO, j.Customer_PO_LN, Rev, j.Status,
         Order_Quantity,
         Promised_Quantity,
         j.Unit_Price,
@@ -86,7 +86,7 @@ router.get("/po-details/:jobID", [auth], async (req: any, res: Response) => {
       on j.Contact = c.Contact
       LEFT JOIN
       (SELECT * FROM [Production].[dbo].[Address]) as a
-      on ph.Ship_To = a.Address
+      on j.Ship_To = a.Address
       WHERE j.Job=:jobID
       `,
       {
