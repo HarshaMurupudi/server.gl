@@ -32,7 +32,7 @@ const ShopRequest = require("../models/requestForms/ShopRequest");
 const EcoRequest = require("../models/requestForms/EcoRequest");
 const MaintenanceRequest = require("../models/requestForms/MaintenanceRequest");
 const ImprovementRequest = require("../models/requestForms/ImprovementRequest");
-
+const SafetyRequest = require("../models/requestForms/SafetyRequests");
 
 import { upsert } from "../utils";
 
@@ -499,6 +499,89 @@ router.patch("/requests/shop", async (req, res) => {
           from: 'gliteam@general-label.com', // Change to your verified sender
           subject: `New Shop Request`,
           html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/safety", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Work_Center = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Subject,
+        Work_Center,
+        Priority,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+
+      await upsert(SafetyRequest, condition, values);
+      
+      if (!Request_ID) {
+        const date = new Date()
+
+        var safetyHTML = `
+            <h3>Safety Report</h3>
+            <p>Initiator: ${Initiator}</p>
+            <p>Submission Date: ${date.toLocaleString()}</p>
+            <p>Subject: ${Subject}</p>
+            <p>Work Center: ${Work_Center}</p>
+            <p>Priority: ${Priority}</p>
+            <p>Request: ${Request}</p>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [ // Susan, Nate, Jason, Sumit
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Safety Report`,
+          html: safetyHTML,
         }
         sgMail
           .send(msg)

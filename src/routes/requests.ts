@@ -83,6 +83,12 @@ router.get("/requests/entries", async (req, res) => {
             FROM [General_Label].[dbo].[Shop_Request]
             `,
         );
+        const safetyArray = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Safety_Request]
+            `,
+        );
         const maintenanceArray = await glDB.query(
             `
             SELECT * 
