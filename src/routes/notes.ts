@@ -588,13 +588,22 @@ router.patch("/requests/safety", async (req, res) => {
         const msg = {
           personalizations: [
             {
-              "to": [ // Susan, Nate, Jason, Sumit
-                // {
-                //   "email": "sumitm@general-label.com"
-                // },
+              "to": [ // Susan, Lyn, Jason, Sumit
                 {
-                  "email": "spencererie01@gmail.com"
+                  "email": "lyn@general-label.com"
                 },
+                {
+                  "email": "susan@general-label.com"
+                },
+                {
+                  "email": "jason@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                // {
+                //   "email": "spencererie01@gmail.com"
+                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
@@ -708,6 +717,8 @@ router.patch("/requests/eco", async (req, res) => {
           <div class="request-details">
               <p><strong>Request:</strong></p>
               <p>${Request}</p>
+              <p><strong>Approval Comment:</strong></p>
+              <p>${Approval_Comment}</p>
           </div>
           <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
         </div>
@@ -719,7 +730,16 @@ router.patch("/requests/eco", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "spencererie01@gmail.com"// "email": "sumitm@general-label.com"
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "bill@general-label.com"
+                },
+                {
+                  "email": "scottb@general-label.com"
+                },
+                {
+                  "email": "mat@general-label.com"
                 },
               ]
             }], // Change to your recipient
@@ -837,9 +857,9 @@ router.patch("/requests/maintenance", async (req, res) => {
                 {
                   "email": "sumitm@general-label.com"
                 },
-                {
-                  "email": "spencererie01@gmail.com"
-                },
+                // {
+                //   "email": "spencererie01@gmail.com"
+                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
@@ -936,11 +956,14 @@ router.patch("/requests/improvement", async (req, res) => {
                   "email": "nate@general-label.com"
                 },
                 {
-                  "email": "sumitm@general-label.com"
+                  "email": "jerie@general-label.com"
                 },
                 {
-                  "email": "spencererie01@gmail.com"
+                  "email": "sumitm@general-label.com"
                 },
+                // {
+                //   "email": "spencererie01@gmail.com"
+                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
