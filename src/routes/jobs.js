@@ -106,7 +106,8 @@ router.get("/", async (req, res) => {
           Shipped_Quantity,
           Quote,
           Production_Status,
-          Numeric2
+          Numeric2,
+          Comment
         FROM 
         (
           SELECT DISTINCT 
@@ -117,7 +118,7 @@ router.get("/", async (req, res) => {
             t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
-            Numeric2
+            Numeric2, cast(d.Comment as nvarchar(max)) as Comment
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
@@ -139,6 +140,10 @@ router.get("/", async (req, res) => {
               LEFT JOIN
               (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
               ON c.User_Values = u2.User_Values
+
+              LEFT JOIN
+              (SELECT Job, DeliveryKey, Comment FROM [Production].[dbo].Delivery) as d
+              ON t2.DeliveryKey = d.DeliveryKey
 
             WHERE t1.Status IN ('Active', 'Complete')
             ) a
@@ -215,7 +220,8 @@ router.get("/now-at", async (req, res) => {
           Shipped_Quantity,
           Quote,
           Production_Status,
-          Numeric2
+          Numeric2,
+          Comment
         FROM 
         (
           SELECT DISTINCT 
@@ -226,7 +232,7 @@ router.get("/now-at", async (req, res) => {
             t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
-            Numeric2
+            Numeric2, cast(d.Comment as nvarchar(max)) as Comment
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
@@ -248,6 +254,10 @@ router.get("/now-at", async (req, res) => {
               LEFT JOIN
               (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
               ON c.User_Values = u2.User_Values
+
+              LEFT JOIN
+              (SELECT Job, DeliveryKey, Comment FROM [Production].[dbo].Delivery) as d
+              ON t2.DeliveryKey = d.DeliveryKey
 
             WHERE t1.Status IN ('Active', 'Complete')
             ) a
@@ -418,11 +428,12 @@ router.get("/job-image/:jobID", async (req, res) => {
 router.get("/jobs", async (req, res) => {
   try {
     const jobs = await JobModel.findAll({
-      where: {...req.query, 
+      where: {
+        ...req.query,
         // Status: {
         // [Op.not]: 'Hold'
-      // }
-    },
+        // }
+      },
       include: [
         {
           model: Delivery,
@@ -451,11 +462,12 @@ router.get("/jobs", async (req, res) => {
 router.get("/jobs/on-hand-qty", async (req, res) => {
   try {
     const oJobs = await JobModel.findAll({
-      where: {...req.query, 
-      //   Status: {
-      //   [Op.not]: 'Hold'
-      // }
-    },
+      where: {
+        ...req.query,
+        //   Status: {
+        //   [Op.not]: 'Hold'
+        // }
+      },
       include: [
         {
           model: Delivery,
@@ -467,8 +479,7 @@ router.get("/jobs/on-hand-qty", async (req, res) => {
       ],
     });
 
-    const jobs  = oJobs.map(el => el.get({ plain: true }));
-    
+    const jobs = oJobs.map((el) => el.get({ plain: true }));
 
     for (const job of jobs) {
       const parts = await glDB.query(
@@ -492,16 +503,15 @@ router.get("/jobs/on-hand-qty", async (req, res) => {
         }
       );
 
-    //console.log(parts)
+      //console.log(parts)
 
       const total = parts.reduce((sum, item) => {
         sum = sum + item.On_Hand_Qty;
         return sum;
       }, 0);
-    
+
       job.On_Hand_Qty = total;
     }
-    
 
     res.status(200).json({
       status: "success",
