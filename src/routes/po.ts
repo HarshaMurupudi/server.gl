@@ -73,8 +73,8 @@ router.get("/po-details/:jobID", [auth], async (req: any, res: Response) => {
       LEFT JOIN
       (SELECT * from [Production].[dbo].[Packlist_Detail]) as pd
       on pd.Job = j.Job
-      LEFT JOIN(SELECT Job, Act_Price AS Act_NRE_Charges, Est_Price AS Est_NRE_Charges 
-        FROM [Production].[dbo].[Additional_Charge]) AS ac  
+      LEFT JOIN(SELECT Job, SUM(Act_Price) AS Act_NRE_Charges, SUM(Est_Price) AS Est_NRE_Charges
+        FROM [Production].[dbo].[Additional_Charge] GROUP BY Job) AS ac  
         ON j.Job = ac.Job  
       LEFT JOIN 
       (SELECT *  FROM [Production].[dbo].[Delivery]) AS d ON j.Job = d.Job
