@@ -601,9 +601,6 @@ router.patch("/requests/safety", async (req, res) => {
                 {
                   "email": "sumitm@general-label.com"
                 },
-                // {
-                //   "email": "spencererie01@gmail.com"
-                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
@@ -857,9 +854,6 @@ router.patch("/requests/maintenance", async (req, res) => {
                 {
                   "email": "sumitm@general-label.com"
                 },
-                // {
-                //   "email": "spencererie01@gmail.com"
-                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
@@ -932,7 +926,7 @@ router.patch("/requests/improvement", async (req, res) => {
 
         var shopHTML = `
         <div class="new-improvement-request">
-          <h3>New Improvement Request</h3>
+          <h3>New Continuous Improvement Request</h3>
           <ul>
               <li><strong>Initiator:</strong> ${Initiator}</li>
               <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
@@ -961,13 +955,10 @@ router.patch("/requests/improvement", async (req, res) => {
                 {
                   "email": "sumitm@general-label.com"
                 },
-                // {
-                //   "email": "spencererie01@gmail.com"
-                // },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
-          subject: `New Improvement Request`,
+          subject: `New Continuous Improvement Request`,
           html: shopHTML,
         }
         sgMail
