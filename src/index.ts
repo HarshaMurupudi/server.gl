@@ -18,6 +18,7 @@ const attendance = require("./routes/attendance");
 const calendar = require("./routes/calendar");
 const meeting = require("./routes/meeting");
 const training = require("./routes/training");
+const requests = require("./routes/requests");
 
 // WC
 const circuitDepJobs = require("./routes/work-centers/circuitDepartment");
@@ -74,6 +75,7 @@ app.use(attendance);
 app.use(meeting);
 app.use(calendar);
 app.use(training);
+app.use(requests);
 app.use(materialRequirements);
 
 // WC

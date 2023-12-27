@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 const router = express.Router();
 
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const Note = require("../models/Notes");
 
 const EngineeringNotes = require("../models/EngineeringNotes");
@@ -24,6 +27,13 @@ const TrainingNotes = require("../models/notes/TrainingNotes");
 const HoldNotes = require("../models/notes/HoldNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
+
+// Request Notes
+const ShopRequest = require("../models/requestForms/ShopRequest");
+const EcoRequest = require("../models/requestForms/EcoRequest");
+const MaintenanceRequest = require("../models/requestForms/MaintenanceRequest");
+const ImprovementRequest = require("../models/requestForms/ImprovementRequest");
+const SafetyRequest = require("../models/requestForms/SafetyRequests");
 
 import { upsert } from "../utils";
 
@@ -371,6 +381,7 @@ router.patch("/training/notes", async (req, res) => {
 
 router.patch("/training/log", async (req, res) => {
   try {
+    console.log(req.body.data);
     const {
       data: { trainingLog },
     } = req.body;
@@ -418,6 +429,562 @@ router.patch("/training/log", async (req, res) => {
     });
   } catch (error: any) {
     console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/shop", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Part_Number = null,
+      Job_Number = null,
+      Work_Center = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Subject,
+        Part_Number,
+        Job_Number,
+        Work_Center,
+        Priority,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+
+      await upsert(ShopRequest, condition, values);
+      
+      if (!Request_ID) {
+        const date = new Date()
+
+        var shopHTML = `
+        <div class="shop-request">
+          <h3>New Shop Request</h3>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
+        `;
+
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "jerie@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Shop Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/safety", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Work_Center = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Subject,
+        Work_Center,
+        Priority,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+
+      await upsert(SafetyRequest, condition, values);
+      
+      if (!Request_ID) {
+        const date = new Date()
+
+        var safetyHTML = `
+          <div class="safety-report">
+            <h3>Safety Report</h3>
+            <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+            </ul>
+              <div class="report-details">
+                  <p><strong>Report Description:</strong></p>
+                  <p>${Request}</p>
+              </div>
+           </div>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [ // Susan, Lyn, Jason, Sumit
+                {
+                  "email": "lyn@general-label.com"
+                },
+                {
+                  "email": "susan@general-label.com"
+                },
+                {
+                  "email": "jason@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Safety Report`,
+          html: safetyHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/eco", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+
+    for (const {
+      Request_ID,
+      Request_Type,
+      Assigned_To = null,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Part_Number = null,
+      Job_Number = null,
+      Work_Center = null,
+      Eco_Type = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null,
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Assigned_To,
+        Status,
+        Initiator,
+        Subject,
+        Part_Number,
+        Job_Number,
+        Work_Center,
+        Eco_Type,
+        Priority,
+        Request,
+        Approver: Status === "Completed" && !Approver ? Assigned_To : Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+      console.log(Assigned_To);
+      await upsert(EcoRequest, condition, values);
+
+      const date = new Date()
+      var ecoHTML = `
+      <div class="eco-request">
+        <h2>ECO Request</h2>
+        <ul>
+            <li><strong>Initiator:</strong> ${Initiator}</li>
+            <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+            <li><strong>Subject:</strong> ${Subject}</li>
+            <li><strong>ECO Type:</strong> ${Eco_Type}</li>
+            <li><strong>Part Number:</strong> ${Part_Number}</li>
+            <li><strong>Job Number:</strong> ${Job_Number}</li>
+            <li><strong>Work Center:</strong> ${Work_Center}</li>
+            <li><strong>Priority:</strong> ${Priority}</li>
+            <li><strong>Status:</strong> ${Status}</li>
+        </ul>
+        <div class="request-details">
+            <p><strong>Request:</strong></p>
+            <p>${Request}</p>
+        </div>
+        <a href="http://10.0.0.177:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+      </div>
+      `;
+
+      var approvalHTML = `
+        <div class="assigned-eco">
+          <h2>Assigned ECO</h2>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>ECO Type:</strong> ${Eco_Type}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+              <li><strong>Status:</strong> ${Status}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+              <p><strong>Approval Comment:</strong></p>
+              <p>${Approval_Comment}</p>
+          </div>
+          <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
+        </div>
+      `;
+
+      if (!Request_ID) {
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "bill@general-label.com"
+                },
+                {
+                  "email": "scottb@general-label.com"
+                },
+                {
+                  "email": "mat@general-label.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New ECO Request`,
+          html: ecoHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      } else if (Status === "Pending" && Assigned_To){
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": Assigned_To
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `New ECO Assignment`,
+          html: approvalHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/maintenance", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Work_Center = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Subject,
+        Work_Center,
+        Priority,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+      await upsert(MaintenanceRequest, condition, values);
+
+      if (!Request_ID) {
+        const date = new Date()
+
+        var maintenanceHTML = `
+        <div class="maintenance-request">
+          <h2>Maintenance Request</h2>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Maintenance Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
+        `;
+
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "jason@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Maintenance Request`,
+          html: maintenanceHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/requests/improvement", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Subject = null,
+      Part_Number = null,
+      Job_Number = null,
+      Work_Center = null,
+      Priority = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Subject,
+        Part_Number,
+        Job_Number,
+        Work_Center,
+        Priority,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+      await upsert(ImprovementRequest, condition, values);
+      if (!Request_ID) {
+        const date = new Date()
+
+        var shopHTML = `
+        <div class="new-improvement-request">
+          <h3>New Continuous Improvement Request</h3>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Submission Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Subject:</strong> ${Subject}</li>
+              <li><strong>Part Number:</strong> ${Part_Number}</li>
+              <li><strong>Job Number:</strong> ${Job_Number}</li>
+              <li><strong>Work Center:</strong> ${Work_Center}</li>
+              <li><strong>Priority:</strong> ${Priority}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Request:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
+        `;
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "nate@general-label.com"
+                },
+                {
+                  "email": "jerie@general-label.com"
+                },
+                {
+                  "email": "sumitm@general-label.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Continuous Improvement Request`,
+          html: shopHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
 
     res.status(400).json({
       status: "Error",
