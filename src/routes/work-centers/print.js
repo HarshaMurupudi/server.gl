@@ -64,10 +64,19 @@ router.get("/print/jobsByWorkCenter/:workCenterName", async (req, res) => {
               jo.Est_Total_Hrs,
               del.DeliveryKey,
               jo.Job_OperationKey,
-              j.Lead_Days,
-              j.Customer_PO, j.Top_Lvl_Job
+              j.Lead_Days, j.User_Values,
+              j.Customer_PO, j.Top_Lvl_Job,
+              Colors,
+              Print_Pcs,
+              Number_Up,
+              Press
               FROM [dbo].[Job] AS j
               LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
+
+              LEFT JOIN
+              (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
+                ON j.User_Values = u.U_User_Values
+
               LEFT JOIN 
                 (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
                 AS del ON j.Job = del.Job
@@ -150,9 +159,19 @@ router.get("/print/jobs/open/:workCenterName", async (req, res) => {
             jo.Est_Total_Hrs,
             del.DeliveryKey,
             jo.Job_OperationKey,
-            j.Lead_Days,
-            j.Customer_PO, j.Top_Lvl_Job
+            j.Lead_Days, j.User_Values,
+            j.Customer_PO, j.Top_Lvl_Job,
+            Colors,
+            Print_Pcs,
+            Number_Up,
+            Press
           from [Production].[dbo].[Job] as j
+
+          
+          LEFT JOIN
+          (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
+            ON j.User_Values = u.U_User_Values
+
           left join
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
           on j.Job = jo.Job
@@ -251,9 +270,18 @@ router.get("/print/jobs/open/:workCenterName/now-at", async (req, res) => {
             jo.Est_Total_Hrs,
             del.DeliveryKey,
             jo.Job_OperationKey,
-            j.Lead_Days,
-            j.Customer_PO, j.Top_Lvl_Job
+            j.Lead_Days, j.User_Values,
+            j.Customer_PO, j.Top_Lvl_Job,
+            Colors,
+            Print_Pcs,
+            Number_Up,
+            Press
           from [Production].[dbo].[Job] as j
+
+          LEFT JOIN
+          (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
+            ON j.User_Values = u.U_User_Values
+
           left join
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
           on j.Job = jo.Job
