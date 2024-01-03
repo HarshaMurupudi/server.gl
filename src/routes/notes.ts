@@ -274,38 +274,19 @@ router.patch("/attendance/notes", async (req, res) => {
       Attendance_Note = null,
       Note_Date = null,
     } of attendance) {
-      const obj = await AttendanceNotes.findOne({
-        where: { First_Name, Last_Name, Attendance_Note_ID },
-      });
-      if (obj) {
-        if (obj.Login == null && Login != null){
-          obj.update({
-            Login,
-          });
-        } else {
-          obj.update({
-            Employee,
-            First_Name,
-            Last_Name,
-            Status,
-            Login,
-            Logout,
-            Attendance_Note,
-          });
-        }
-      } else {
-        AttendanceNotes.create({
-          Attendance_Note_ID,
-          Employee,
-          First_Name,
-          Last_Name,
-          Status,
-          Login,
-          Logout,
-          Attendance_Note,
-          Note_Date,
-        });
+      const condition = { Attendance_Note_ID }
+      const values = {
+        Employee,
+        First_Name,
+        Last_Name,
+        Status,
+        Login,
+        Logout,
+        Attendance_Note,
+        Note_Date: Note_Date === null ? (new Date().toISOString()) : Note_Date,
       }
+      console.log(new Date().toISOString());
+      await upsert(AttendanceNotes, condition, values);
     }
     res.status(200).json({
       status: "success",

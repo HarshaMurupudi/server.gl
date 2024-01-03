@@ -14,6 +14,7 @@ router.get("/attendance", async (req, res) => {
         t1.First_Name,
         t1.Last_Name,
         t1.Shift,
+        t1.Type,
         t2.Login,
         t2.Logout,
         t3.Attendance_Note,
@@ -56,6 +57,7 @@ router.get("/attendance", async (req, res) => {
         (SELECT
           e.First_Name,
           e.Last_Name,
+          e.Type,
           t2.Shift,
           t2.Start_Time,
           t2.End_Time,
@@ -75,11 +77,14 @@ router.get("/attendance", async (req, res) => {
         t1.First_Name ASC;
     `);
 
+    // console.log(notes);
+
     const employees = await glDB.query(`
       SELECT 
         First_Name, 
         Last_Name, 
         Status,
+        Type,
         t1.Shift,
         t2.Shift,
         COALESCE(t2.Start_Time, '1900-01-01T00:00:00.000Z') AS Start_Time,
@@ -97,11 +102,10 @@ router.get("/attendance", async (req, res) => {
       ORDER BY First_Name ASC;
     `);
 
-    console.log(notes);
-
     interface Employee {
       First_Name: string;
       Last_Name: string;
+      Type: string;
     }
 
     interface Attendance {
@@ -109,6 +113,7 @@ router.get("/attendance", async (req, res) => {
       Status: string;
       First_Name: string;
       Last_Name: string;
+      Type: string;
       Login: string;
       Logout: string;
       Attendance_Note: string | null;
@@ -118,8 +123,6 @@ router.get("/attendance", async (req, res) => {
       End_Time: Date | null;
       Post_Start_Grace: number;
     }
-
-    console.log(attendance);
 
     function findAttendance(first: string, last: string): Attendance[] {
       const matchingEntries = attendance[0].filter((entry: any) =>
@@ -135,68 +138,111 @@ router.get("/attendance", async (req, res) => {
         return matchingEntries;
       }
     }
+    let loggedIn: any[] = [];
 
-    const loggedIn = employees[0].flatMap((employee: Employee) => {
+    for (const employee of employees[0]) {
       const matchingAttendance = findAttendance(employee.First_Name, employee.Last_Name);
 
       if (matchingAttendance.length > 0) {
-        return matchingAttendance.map((entry: any) => ({
-          Employee: entry.Employee,
-          Status: entry.Status,
-          First_Name: entry.First_Name,
-          Last_Name: entry.Last_Name,
-          Login: entry.Login,
-          Logout: entry.Logout,
-          Attendance_Note: entry.Attendance_Note,
-          Attendance_Note_ID: entry.Attendance_Note_ID,
-          Note_Date: entry.Note_Date,
-          Start_Time: entry.Start_Time,
-          End_Time: entry.End_Time,
-          Post_Start_Grace: entry.PostStart_Grace
-        }));
+        for (const updatedEmployee of matchingAttendance) {
+          const matchingIndex = loggedIn.findIndex(
+            emp => emp.First_Name === updatedEmployee.First_Name && emp.Last_Name === updatedEmployee.Last_Name
+          );
+
+          if (matchingIndex !== -1) {
+            loggedIn[matchingIndex] = {
+              ...loggedIn[matchingIndex],
+              Attendance_Note: updatedEmployee.Attendance_Note,
+              Attendance_Note_ID: updatedEmployee.Attendance_Note_ID,
+              Note_Date: updatedEmployee.Note_Date
+            };
+            console.log(loggedIn[matchingIndex]);
+          }
+        }
+
+        loggedIn = [...loggedIn, ...matchingAttendance];
       }
-    });
+    }
 
-    const notLoggedIn = employees[0].filter(
-      (employee: any) => findAttendance(employee.First_Name, employee.Last_Name).length === 0
-    );
-
-    let allEmployees: any[] = [];
-
-    loggedIn.forEach((employee: any) => {
-      if (employee) {
-        allEmployees.push(employee);
+    function timeDifference(date1: any, date2: any): any {
+      const startDate = new Date(date1);
+      if (!date2) {
+        return null;
       }
-    });
+      const endDate = new Date(date2);
+    
+      const startDateOffset = startDate.getTimezoneOffset();
+      const endDateOffset = endDate.getTimezoneOffset();
+      startDate.setMinutes(startDate.getMinutes() + startDateOffset);
+      endDate.setMinutes(endDate.getMinutes() + endDateOffset);
+    
+      startDate.setFullYear(2000, 0, 1);
+      endDate.setFullYear(2000, 0, 1);
+    
+      const diff = endDate.getTime() - startDate.getTime();
+      const totalMinutes = diff / (1000 * 60);
+      const decimalMinutes = totalMinutes.toFixed(2);
+    
+      return parseFloat(decimalMinutes);
+    }
+
+    async function processBreaks(entries: any) {
+      const processedEntries = [];
+      let currentLogout = null;
+    
+      for (const entry of entries) {
+        if (entry.Logout) {
+          if (!currentLogout) {
+            currentLogout = entry;
+          } else {
+            const logoutStartTime = new Date(currentLogout.Logout);
+            const logoutEndTime = new Date(entry.Login);
+    
+            // Check if the logout is within 8 hours of the previous login
+            if (timeDifference(logoutStartTime, currentLogout.Login) <= 8 * 60) {
+              // Check if there is another login within an hour
+              const nextLogin = entries.find(
+                (e: any) => e.Login && timeDifference(logoutEndTime, e.Login) <= 1
+              );
+    
+              if (nextLogin) {
+                // Calculate lunch break time
+                const breakTime = timeDifference(logoutStartTime, nextLogin.Login);
+                currentLogout.Break_Time = breakTime;
+                processedEntries.push(currentLogout);
+                currentLogout = null;
+              } else {
+                // No login within an hour, consider it as their final logout
+                processedEntries.push(entry);
+                currentLogout = null;
+              }
+            } else {
+              // Logout after 8 hours, consider it as their final logout
+              processedEntries.push(entry);
+              currentLogout = null;
+            }
+          }
+        } else {
+          // Login entry, reset currentLogout
+          currentLogout = null;
+        }
+      }
+    
+      return processedEntries;
+    }
+
+    const test = await processBreaks(loggedIn);
+
+    console.log(test);
 
     const date = new Date(Date.now()).toISOString()
 
-    notLoggedIn.forEach((employee: any) => {
-      const nullObject = {
-        Employee: employee.Employee,
-        Status: employee.Status,
-        First_Name: employee.First_Name,
-        Last_Name: employee.Last_Name,
-        Login: null,
-        Logout: null,
-        Attendance_Note: null,
-        Attendance_Note_ID: null,
-        Note_Date: date,
-        Start_Time: employee.Start_Time,
-        End_Time: employee.End_Time,
-        Post_Start_Grace: employee.PostStart_Grace
-      };
 
-      allEmployees.push(nullObject);
-    });
-
-    // console.log(allEmployees);
-
-    if (allEmployees.length > 0) {
+    if (loggedIn.length > 0) {
       res.status(200).json({
         status: "success",
-        results: allEmployees.length,
-        attendance: allEmployees,
+        results: loggedIn.length,
+        attendance: loggedIn,
       });
     } else {
       res.status(200).json({
