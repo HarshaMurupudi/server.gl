@@ -44,7 +44,7 @@ const PORT = process.env.AUTOMATE_PORT;
 glDB
   .authenticate()
   .then(() => console.log("DB Authenticated"))
-  .catch((err: any) => {
+  .catch((err) => {
     console.log("Error: " + err);
     // console.log(logger.error());
     // logger.error(err.stack);
