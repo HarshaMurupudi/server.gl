@@ -111,7 +111,8 @@ router.get("/", async (req, res) => {
           Colors,
           Print_Pcs,
           Number_Up,
-          Press
+          Press,
+          Process
         FROM 
         (
           SELECT DISTINCT 
@@ -123,13 +124,13 @@ router.get("/", async (req, res) => {
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
             Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
-            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press
+            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
               WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
             LEFT JOIN
-            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
+            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
               ON t1.User_Values = u.U_User_Values
             
             LEFT JOIN
@@ -230,7 +231,8 @@ router.get("/now-at", async (req, res) => {
           Colors,
           Print_Pcs,
           Number_Up,
-          Press
+          Press,
+          Process
         FROM 
         (
           SELECT DISTINCT 
@@ -242,13 +244,13 @@ router.get("/now-at", async (req, res) => {
             Completed_Quantity, Promised_Date, t1.Sales_Code,
             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
             Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
-            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press
+            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process
           FROM [Production].[dbo].[Job] AS t1           
             INNER JOIN 
             (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
               WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
             LEFT JOIN
-            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
+            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
               ON t1.User_Values = u.U_User_Values
             
             LEFT JOIN
