@@ -80,27 +80,28 @@ router.get("/requests/entries", async (req, res) => {
         const shopArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Shop_Request]
-            `,
+            FROM [General_Label].[dbo].[Shop_Request]`,
         );
         const safetyArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Safety_Request]
-            `,
+            FROM [General_Label].[dbo].[Safety_Request]`,
         );
         const maintenanceArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Maintenance_Request]
-            `,
+            FROM [General_Label].[dbo].[Maintenance_Request]`,
         );
         const improvementArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Improvement_Request]
-            `,
+            FROM [General_Label].[dbo].[Improvement_Request]`,
         );
+        const timeOffArray = await glDB.query(
+            `
+            SELECT *
+            FROM [General_Label].[dbo].[Time_Off_Request]`
+        )
 
         maintenanceArray[0].forEach((obj: any) => {
             if (obj !== null){
@@ -116,7 +117,18 @@ router.get("/requests/entries", async (req, res) => {
         }
         });
 
-        const entries = shopArray[0].concat(maintenanceArray[0]).concat(improvementArray[0]).concat(safetyArray[0]);
+        timeOffArray[0].forEach((obj: any) => {
+            if (obj !== null){
+                obj.Part_Number = null;
+                obj.Job_Number = null;
+            }
+            });
+
+        const entries = shopArray[0]
+        .concat(maintenanceArray[0])
+        .concat(improvementArray[0])
+        .concat(safetyArray[0])
+        .concat(timeOffArray[0]);
 
         if (entries.length > 0) {
             res.status(200).json({

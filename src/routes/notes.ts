@@ -33,6 +33,7 @@ const EcoRequest = require("../models/requestForms/EcoRequest");
 const MaintenanceRequest = require("../models/requestForms/MaintenanceRequest");
 const ImprovementRequest = require("../models/requestForms/ImprovementRequest");
 const SafetyRequest = require("../models/requestForms/SafetyRequests");
+const TimeOffRequest = require("../models/requestForms/TimeOffRequests");
 
 import { upsert } from "../utils";
 
@@ -882,6 +883,99 @@ router.patch("/requests/maintenance", async (req, res) => {
     });
   }
 });
+
+router.patch("/requests/time-off", async (req, res) => {
+  try {
+    const {
+      data: { form },
+    } = req.body;
+
+    for (const {
+      Request_ID,
+      Request_Type,
+      Submission_Date = null,
+      Status = null,
+      Initiator = null,
+      Start_Date = null,
+      End_Date = null,
+      Request = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const condition = { Request_ID, Request_Type };
+      const values = { 
+        Submission_Date,
+        Status,
+        Initiator,
+        Start_Date,
+        End_Date,
+        Request,
+        Approver,
+        Approval_Comment,
+        Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+      };
+      await upsert(TimeOffRequest, condition, values);
+
+    //   if (!Request_ID) {
+    //     const date = new Date()
+
+    //     var maintenanceHTML = `
+    //     <div class="maintenance-request">
+    //       <h2>Maintenance Request</h2>
+    //       <ul>
+    //           <li><strong>Initiator:</strong> ${Initiator}</li>
+    //           <li><strong>Date:</strong> ${date.toLocaleString()}</li>
+    //           <li><strong>Subject:</strong> ${Subject}</li>
+    //           <li><strong>Work Center:</strong> ${Work_Center}</li>
+    //           <li><strong>Priority:</strong> ${Priority}</li>
+    //       </ul>
+    //       <div class="request-details">
+    //           <p><strong>Maintenance Request:</strong></p>
+    //           <p>${Request}</p>
+    //       </div>
+    //     </div>
+    //     `;
+
+    //     const msg = {
+    //       personalizations: [
+    //         {
+    //           "to": [
+    //             {
+    //               "email": "jason@general-label.com"
+    //             },
+    //             {
+    //               "email": "sumitm@general-label.com"
+    //             },
+    //           ]
+    //         }], // Change to your recipient
+    //       from: 'gliteam@general-label.com', // Change to your verified sender
+    //       subject: `New Maintenance Request`,
+    //       html: maintenanceHTML,
+    //     }
+    //     sgMail
+    //       .send(msg)
+    //       .then(() => {
+    //         console.log('Email sent')
+    //       })
+    //       .catch((error: any) => {
+    //         console.error(error)
+    //       })
+      // }
+    };
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
 
 router.patch("/requests/improvement", async (req, res) => {
   try {
