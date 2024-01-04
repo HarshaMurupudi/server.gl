@@ -8,56 +8,106 @@ const router = express.Router();
 router.get("/attendance", async (req, res) => {
   try {
     let attendance = await glDB.query(`
-      SELECT 
-        t1.Employee, 
-        t1.Status, 
-        t1.First_Name, 
-        t1.Last_Name, 
-        t2.Login, 
+      SELECT
+        t1.Employee,
+        t1.Status,
+        t1.First_Name,
+        t1.Last_Name,
+        t1.Shift,
+        t1.Type,
+        t2.Login,
         t2.Logout,
         t3.Attendance_Note,
-        t3.Attendance_Note_ID
+        t3.Attendance_Note_ID,
+        COALESCE(t4.Start_Time, '1900-01-01T00:00:00.000Z') AS Start_Time,
+        COALESCE(t4.End_Time, '1900-01-01T00:00:00.000Z') AS End_Time,
+        t4.Shift AS Shift_Day_Shift,
+        t4.Sequence
       FROM [Production].[dbo].[Employee] AS t1
-      INNER JOIN
-      (SELECT Employee, Login, Logout
-      FROM [Production].[dbo].[Attendance]
-      WHERE CAST(Login AS Date) = CAST(GETDATE() AS Date)) AS t2
-      ON t1.Employee = t2.Employee
-      LEFT JOIN
-      (SELECT *
-      FROM [General_Label].[dbo].[Attendance_Notes]) AS t3
-      ON t1.First_Name = t3.First_Name 
-      AND t1.Last_Name = t3.Last_Name 
-      AND t2.Login = t3.Login
+      LEFT JOIN [Production].[dbo].[Attendance] AS t2
+        ON t1.Employee = t2.Employee
+        AND CAST(t2.Login AS Date) = CAST(GETDATE() AS Date)
+      LEFT JOIN [General_Label].[dbo].[Attendance_Notes] AS t3
+        ON t1.First_Name = t3.First_Name
+        AND t1.Last_Name = t3.Last_Name
+        AND t2.Login = t3.Login
+      LEFT JOIN [Production].[dbo].[Shift_Day] AS t4
+        ON t1.Shift = t4.Shift
+      WHERE t4.Sequence = (DATEPART(dw, GETDATE()) - 1)
+      AND t1.Type = 'Shop'
     `);
     
     const notes = await glDB.query(`
+      SELECT
+        t1.First_Name,
+        t1.Last_Name,
+        t1.Status,
+        t1.Login,
+        t1.Logout,
+        t1.Attendance_Note,
+        t1.Attendance_Note_ID,
+        t1.Note_Date,
+        t2.Shift,
+        COALESCE(t2.Start_Time, '1900-01-01T00:00:00.000Z') AS Start_Time,
+        COALESCE(t2.End_Time, '1900-01-01T00:00:00.000Z') AS End_Time,
+        t2.PostStart_Grace,
+        t2.Sequence
+      FROM
+        [General_Label].[dbo].[Attendance_Notes] AS t1
+      LEFT JOIN
+        (SELECT
+          e.First_Name,
+          e.Last_Name,
+          e.Type,
+          t2.Shift,
+          t2.Start_Time,
+          t2.End_Time,
+          t2.PostStart_Grace,
+          t2.Sequence
+        FROM
+          [Production].[dbo].[Employee] AS e
+        LEFT JOIN
+          [Production].[dbo].[Shift_Day] AS t2 ON e.Shift = t2.Shift
+        ) AS t2 ON t1.First_Name = t2.First_Name AND t1.Last_Name = t2.Last_Name
+      WHERE
+        t1.Status = 'Active'
+        AND t1.Login IS NULL
+        AND CAST(t1.Note_Date AS Date) = CAST(GETDATE() AS Date)
+        AND t2.Sequence = (DATEPART(dw,GETDATE()) - 1)
+      ORDER BY
+        t1.First_Name ASC;
+    `);
+
+    // console.log(notes);
+
+    const employees = await glDB.query(`
       SELECT 
         First_Name, 
         Last_Name, 
-        Status, 
-        Login, 
-        Attendance_Note, 
-        Attendance_Note_ID
-      FROM [General_Label].[dbo].[Attendance_Notes]
-      WHERE STATUS = 'Active' 
-      AND Login IS NULL
-      AND CAST(Note_Date AS Date) = CAST(GETDATE() AS Date)
-      ORDER BY First_Name ASC
-    `);
-
-    const employees = await glDB.query(`
-      SELECT First_Name, Last_Name, Status
-      FROM [Production].[dbo].[Employee]
+        Status,
+        Type,
+        t1.Shift,
+        t2.Shift,
+        COALESCE(t2.Start_Time, '1900-01-01T00:00:00.000Z') AS Start_Time,
+        COALESCE(t2.End_Time, '1900-01-01T00:00:00.000Z') AS End_Time,
+        t2.PostStart_Grace
+      FROM [Production].[dbo].[Employee] AS t1
+      LEFT JOIN
+        (SELECT *
+        FROM [Production].[dbo].[Shift_Day]) AS t2
+      ON t1.Shift = t2.Shift
       WHERE STATUS = 'Active'
-      AND Last_Name != 'SALES'
-      AND First_Name != 'Sales'
-      ORDER BY First_Name ASC
+        AND Last_Name != 'SALES'
+        AND First_Name != 'Sales'
+        AND Sequence = (DATEPART(dw, GETDATE()) - 1)
+      ORDER BY First_Name ASC;
     `);
+    console.log(attendance);
 
     interface Employee {
       First_Name: string;
       Last_Name: string;
+      Type: string;
     }
 
     interface Attendance {
@@ -65,11 +115,15 @@ router.get("/attendance", async (req, res) => {
       Status: string;
       First_Name: string;
       Last_Name: string;
+      Type: string;
       Login: string;
       Logout: string;
       Attendance_Note: string | null;
       Attendance_Note_ID: number | null;
       Note_Date: Date | null;
+      Start_Time: Date | null;
+      End_Time: Date | null;
+      Post_Start_Grace: number;
     }
 
     function findAttendance(first: string, last: string): Attendance[] {
@@ -86,60 +140,103 @@ router.get("/attendance", async (req, res) => {
         return matchingEntries;
       }
     }
+    let allEmployees: any[] = [];
 
-    const loggedIn = employees[0].flatMap((employee: Employee) => {
+    for (const employee of employees[0]) {
       const matchingAttendance = findAttendance(employee.First_Name, employee.Last_Name);
 
       if (matchingAttendance.length > 0) {
-        return matchingAttendance.map((entry: any) => ({
-          Employee: entry.Employee,
-          Status: entry.Status,
-          First_Name: entry.First_Name,
-          Last_Name: entry.Last_Name,
-          Login: entry.Login,
-          Logout: entry.Logout,
-          Attendance_Note: entry.Attendance_Note,
-          Attendance_Note_ID: entry.Attendance_Note_ID,
-          Note_Date: entry.Note_Date,
-        }));
+        for (const updatedEmployee of matchingAttendance) {
+          const matchingIndex = allEmployees.findIndex(
+            emp => emp.First_Name === updatedEmployee.First_Name && emp.Last_Name === updatedEmployee.Last_Name
+          );
+
+          if (matchingIndex !== -1) {
+            allEmployees[matchingIndex] = {
+              ...allEmployees[matchingIndex],
+              Attendance_Note: updatedEmployee.Attendance_Note,
+              Attendance_Note_ID: updatedEmployee.Attendance_Note_ID,
+              Note_Date: updatedEmployee.Note_Date
+            };
+            console.log(allEmployees[matchingIndex]);
+          }
+        }
+
+        allEmployees = [...allEmployees, ...matchingAttendance];
       }
-    });
+    }
 
-    const notLoggedIn = employees[0].filter(
-      (employee: any) => findAttendance(employee.First_Name, employee.Last_Name).length === 0
-    );
+    if (notes.length > 0) {
+      notes[0].forEach((note: any) => {    
+        const matchingEmployee = allEmployees.find(employee =>
+          employee.First_Name === note.First_Name && employee.Last_Name === note.Last_Name
+        );
+    
+        if (matchingEmployee) {
+          matchingEmployee.Attendance_Note = note.Attendance_Note;
+          matchingEmployee.Attendance_Note_ID = note.Attendance_Note_ID;
+          matchingEmployee.Note_Date = note.Note_Date;
+        }
+      });
+    }
 
-    let allEmployees: any[] = [];
-
-    loggedIn.forEach((employee: any) => {
-      if (employee) {
-        allEmployees.push(employee);
+    function consolidateEntries(allEmployees: any): any[] {
+      const consolidatedEntries: any[] = [];
+    
+      const groupedEmployees = allEmployees.reduce((groups: any, employee: any) => {
+        const key = `${employee.First_Name}_${employee.Last_Name}`;
+        groups[key] = groups[key] || [];
+        groups[key].push(employee);
+        return groups;
+      }, {});
+    
+      for (const key in groupedEmployees) {
+        const entries = groupedEmployees[key];
+    
+        const earliestEntry = entries.reduce((earliest: any, current: any) => {
+          return (!earliest.Login || (current.Login && current.Login < earliest.Login)) ? current : earliest;
+        }, {});
+    
+        const latestLogoutEntry = entries.reduce((latest: any, current: any) => {
+          return (latest.Logout || current.Logout && current.Logout > latest.Logout) ? current : latest;
+        }, {});
+    
+        consolidatedEntries.push({
+          ...earliestEntry,
+          Logout: latestLogoutEntry.Logout
+        });
       }
-    });
-
-    const date = new Date(Date.now()).toISOString()
-
-    notLoggedIn.forEach((employee: any) => {
-      const nullObject = {
-        Employee: employee.Employee,
-        Status: employee.Status,
-        First_Name: employee.First_Name,
-        Last_Name: employee.Last_Name,
-        Login: null,
-        Logout: null,
-        Attendance_Note: null,
-        Attendance_Note_ID: null,
-        Note_Date: date,
-      };
-
-      allEmployees.push(nullObject);
-    });
+    
+      return consolidatedEntries;
+    }
+        
+    function timeDifference(date1: any, date2: any): any {
+      const startDate = new Date(date1);
+      if (!date2) {
+        return null;
+      }
+      const endDate = new Date(date2);
+    
+      const startDateOffset = startDate.getTimezoneOffset();
+      const endDateOffset = endDate.getTimezoneOffset();
+      startDate.setMinutes(startDate.getMinutes() + startDateOffset);
+      endDate.setMinutes(endDate.getMinutes() + endDateOffset);
+    
+      startDate.setFullYear(2000, 0, 1);
+      endDate.setFullYear(2000, 0, 1);
+    
+      const diff = endDate.getTime() - startDate.getTime();
+      const totalMinutes = diff / (1000 * 60);
+      const decimalMinutes = totalMinutes.toFixed(2);
+    
+      return parseFloat(decimalMinutes);
+    }
 
     if (allEmployees.length > 0) {
       res.status(200).json({
         status: "success",
         results: allEmployees.length,
-        attendance: allEmployees,
+        attendance: consolidateEntries(allEmployees),
       });
     } else {
       res.status(200).json({
