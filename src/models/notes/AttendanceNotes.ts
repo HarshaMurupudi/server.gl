@@ -18,9 +18,6 @@ const AttendanceNotes = db.define(
     Last_Name: {
       type: Sequelize.STRING,
     },
-    Type: {
-      type: Sequelize.STRING,
-    },
     Status: {
       type: Sequelize.STRING,
     },

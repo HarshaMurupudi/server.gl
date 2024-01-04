@@ -33,7 +33,8 @@ router.get("/attendance", async (req, res) => {
         AND t2.Login = t3.Login
       LEFT JOIN [Production].[dbo].[Shift_Day] AS t4
         ON t1.Shift = t4.Shift
-      WHERE t4.Sequence = (DATEPART(dw, GETDATE()) - 1);
+      WHERE t4.Sequence = (DATEPART(dw, GETDATE()) - 1)
+      AND t1.Type = 'Shop'
     `);
     
     const notes = await glDB.query(`
@@ -138,32 +139,77 @@ router.get("/attendance", async (req, res) => {
         return matchingEntries;
       }
     }
-    let loggedIn: any[] = [];
+    let allEmployees: any[] = [];
 
     for (const employee of employees[0]) {
       const matchingAttendance = findAttendance(employee.First_Name, employee.Last_Name);
 
       if (matchingAttendance.length > 0) {
         for (const updatedEmployee of matchingAttendance) {
-          const matchingIndex = loggedIn.findIndex(
+          const matchingIndex = allEmployees.findIndex(
             emp => emp.First_Name === updatedEmployee.First_Name && emp.Last_Name === updatedEmployee.Last_Name
           );
 
           if (matchingIndex !== -1) {
-            loggedIn[matchingIndex] = {
-              ...loggedIn[matchingIndex],
+            allEmployees[matchingIndex] = {
+              ...allEmployees[matchingIndex],
               Attendance_Note: updatedEmployee.Attendance_Note,
               Attendance_Note_ID: updatedEmployee.Attendance_Note_ID,
               Note_Date: updatedEmployee.Note_Date
             };
-            console.log(loggedIn[matchingIndex]);
+            console.log(allEmployees[matchingIndex]);
           }
         }
 
-        loggedIn = [...loggedIn, ...matchingAttendance];
+        allEmployees = [...allEmployees, ...matchingAttendance];
       }
     }
 
+    if (notes.length > 0) {
+      notes[0].forEach((note: any) => {    
+        const matchingEmployee = allEmployees.find(employee =>
+          employee.First_Name === note.First_Name && employee.Last_Name === note.Last_Name
+        );
+    
+        if (matchingEmployee) {
+          matchingEmployee.Attendance_Note = note.Attendance_Note;
+          matchingEmployee.Attendance_Note_ID = note.Attendance_Note_ID;
+          matchingEmployee.Note_Date = note.Note_Date;
+        }
+      });
+    }
+
+    function consolidateEntries(allEmployees: any) {
+      const consolidatedEntries: any[] = [];
+    
+      const latestLoginMap = new Map();
+    
+      allEmployees.forEach((employee: any) => {
+        const key = `${employee.First_Name}_${employee.Last_Name}`;
+    
+        if (!latestLoginMap.has(key)) {
+          latestLoginMap.set(key, employee.Logout);
+        } else {
+          const latestLogin = latestLoginMap.get(key);
+          if (employee.Login && (!latestLogin || employee.Login > latestLogin)) {
+            latestLoginMap.set(key, employee.Logout);
+          }
+        }
+      });
+    
+      allEmployees.forEach((employee: any) => {
+        const key = `${employee.First_Name}_${employee.Last_Name}`;
+        if (employee.Login && employee.Logout !== latestLoginMap.get(key)) {
+          employee.Logout = latestLoginMap.get(key);
+          consolidatedEntries.push(employee);
+        } else if (!employee.Logout) {
+          consolidatedEntries.push(employee);
+        }
+      });
+    
+      return consolidatedEntries;
+    }
+        
     function timeDifference(date1: any, date2: any): any {
       const startDate = new Date(date1);
       if (!date2) {
@@ -186,63 +232,11 @@ router.get("/attendance", async (req, res) => {
       return parseFloat(decimalMinutes);
     }
 
-    async function processBreaks(entries: any) {
-      const processedEntries = [];
-      let currentLogout = null;
-    
-      for (const entry of entries) {
-        if (entry.Logout) {
-          if (!currentLogout) {
-            currentLogout = entry;
-          } else {
-            const logoutStartTime = new Date(currentLogout.Logout);
-            const logoutEndTime = new Date(entry.Login);
-    
-            // Check if the logout is within 8 hours of the previous login
-            if (timeDifference(logoutStartTime, currentLogout.Login) <= 8 * 60) {
-              // Check if there is another login within an hour
-              const nextLogin = entries.find(
-                (e: any) => e.Login && timeDifference(logoutEndTime, e.Login) <= 1
-              );
-    
-              if (nextLogin) {
-                // Calculate lunch break time
-                const breakTime = timeDifference(logoutStartTime, nextLogin.Login);
-                currentLogout.Break_Time = breakTime;
-                processedEntries.push(currentLogout);
-                currentLogout = null;
-              } else {
-                // No login within an hour, consider it as their final logout
-                processedEntries.push(entry);
-                currentLogout = null;
-              }
-            } else {
-              // Logout after 8 hours, consider it as their final logout
-              processedEntries.push(entry);
-              currentLogout = null;
-            }
-          }
-        } else {
-          // Login entry, reset currentLogout
-          currentLogout = null;
-        }
-      }
-    
-      return processedEntries;
-    }
-
-    const test = await processBreaks(loggedIn);
-
-    console.log(test);
-
-    const date = new Date(Date.now()).toISOString()
-
-
-    if (loggedIn.length > 0) {
+    if (allEmployees.length > 0) {
       res.status(200).json({
         status: "success",
-        results: loggedIn.length,
-        attendance: loggedIn,
+        results: allEmployees.length,
+        attendance: consolidateEntries(allEmployees),
       });
     } else {
       res.status(200).json({
