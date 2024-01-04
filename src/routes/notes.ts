@@ -953,6 +953,9 @@ router.patch("/requests/improvement", async (req, res) => {
                   "email": "jerie@general-label.com"
                 },
                 {
+                  "email": "tracey@general-label.com"
+                },
+                {
                   "email": "sumitm@general-label.com"
                 },
               ]
