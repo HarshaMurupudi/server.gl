@@ -102,6 +102,7 @@ router.get("/attendance", async (req, res) => {
         AND Sequence = (DATEPART(dw, GETDATE()) - 1)
       ORDER BY First_Name ASC;
     `);
+    console.log(attendance);
 
     interface Employee {
       First_Name: string;
@@ -179,33 +180,32 @@ router.get("/attendance", async (req, res) => {
       });
     }
 
-    function consolidateEntries(allEmployees: any) {
+    function consolidateEntries(allEmployees: any): any[] {
       const consolidatedEntries: any[] = [];
     
-      const latestLoginMap = new Map();
-    
-      allEmployees.forEach((employee: any) => {
+      const groupedEmployees = allEmployees.reduce((groups: any, employee: any) => {
         const key = `${employee.First_Name}_${employee.Last_Name}`;
+        groups[key] = groups[key] || [];
+        groups[key].push(employee);
+        return groups;
+      }, {});
     
-        if (!latestLoginMap.has(key)) {
-          latestLoginMap.set(key, employee.Logout);
-        } else {
-          const latestLogin = latestLoginMap.get(key);
-          if (employee.Login && (!latestLogin || employee.Login > latestLogin)) {
-            latestLoginMap.set(key, employee.Logout);
-          }
-        }
-      });
+      for (const key in groupedEmployees) {
+        const entries = groupedEmployees[key];
     
-      allEmployees.forEach((employee: any) => {
-        const key = `${employee.First_Name}_${employee.Last_Name}`;
-        if (employee.Login && employee.Logout !== latestLoginMap.get(key)) {
-          employee.Logout = latestLoginMap.get(key);
-          consolidatedEntries.push(employee);
-        } else if (!employee.Logout) {
-          consolidatedEntries.push(employee);
-        }
-      });
+        const earliestEntry = entries.reduce((earliest: any, current: any) => {
+          return (!earliest.Login || (current.Login && current.Login < earliest.Login)) ? current : earliest;
+        }, {});
+    
+        const latestLogoutEntry = entries.reduce((latest: any, current: any) => {
+          return (latest.Logout || current.Logout && current.Logout > latest.Logout) ? current : latest;
+        }, {});
+    
+        consolidatedEntries.push({
+          ...earliestEntry,
+          Logout: latestLogoutEntry.Logout
+        });
+      }
     
       return consolidatedEntries;
     }
