@@ -94,8 +94,8 @@ router.get("/attendance/events", async (req, res) => {
                 id: eventCount,
                 title,
                 allDay: true,
-                start: new Date(currentStartDate),
-                end: new Date(currentEndDate),
+                start: new Date(currentStartDate).getTime() + (12 * 60 * 60 * 1000),
+                end: new Date(currentEndDate).getTime() + (12 * 60 * 60 * 1000),
               };
 
               formattedEvents.push(formattedEvent);
@@ -116,8 +116,8 @@ router.get("/attendance/events", async (req, res) => {
             id: eventCount,
             title,
             allDay: true,
-            start: new Date(currentStartDate),
-            end: new Date(currentEndDate),
+            start: new Date(currentStartDate).getTime() + (12 * 60 * 60 * 1000),
+            end: (new Date(currentEndDate).getTime() + (12 * 60 * 60 * 1000)),
           };
 
           formattedEvents.push(formattedEvent);
