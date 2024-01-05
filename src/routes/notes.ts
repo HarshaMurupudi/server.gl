@@ -631,7 +631,7 @@ router.patch("/requests/safety", async (req, res) => {
   }
 });
 
-router.patch("/requests/eco", async (req, res) => {
+router.patch("/request/eco", async (req, res) => {
   try {
     const {
       data: { form },

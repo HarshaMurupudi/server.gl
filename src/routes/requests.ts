@@ -97,11 +97,6 @@ router.get("/requests/entries", async (req, res) => {
             SELECT * 
             FROM [General_Label].[dbo].[Improvement_Request]`,
         );
-        const timeOffArray = await glDB.query(
-            `
-            SELECT *
-            FROM [General_Label].[dbo].[Time_Off_Request]`
-        )
 
         maintenanceArray[0].forEach((obj: any) => {
             if (obj !== null){
@@ -117,18 +112,10 @@ router.get("/requests/entries", async (req, res) => {
         }
         });
 
-        timeOffArray[0].forEach((obj: any) => {
-            if (obj !== null){
-                obj.Part_Number = null;
-                obj.Job_Number = null;
-            }
-            });
-
         const entries = shopArray[0]
         .concat(maintenanceArray[0])
         .concat(improvementArray[0])
-        .concat(safetyArray[0])
-        .concat(timeOffArray[0]);
+        .concat(safetyArray[0]);
 
         if (entries.length > 0) {
             res.status(200).json({
@@ -139,6 +126,33 @@ router.get("/requests/entries", async (req, res) => {
             res.status(200).json({
                 status:"success",
                 entries: [],           
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
+router.get("/requests/vacation", async (req, res) => {
+    try {
+        const vacations = await glDB.query(
+            `
+            SELECT *
+            FROM [General_Label].[dbo].[Time_Off_Request]`
+        )
+        if (vacations.length > 0) {
+            res.status(200).json({
+                status: "success",
+                vacations: vacations[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                vacations: [],           
             });
         }
     } catch (error: any) {
