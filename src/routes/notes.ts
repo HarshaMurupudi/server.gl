@@ -672,7 +672,6 @@ router.patch("/requests/eco", async (req, res) => {
         Approval_Comment,
         Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
-      console.log(Assigned_To);
       await upsert(EcoRequest, condition, values);
 
       const date = new Date()
@@ -710,7 +709,7 @@ router.patch("/requests/eco", async (req, res) => {
               <li><strong>Job Number:</strong> ${Job_Number}</li>
               <li><strong>Work Center:</strong> ${Work_Center}</li>
               <li><strong>Priority:</strong> ${Priority}</li>
-              <li><strong>Status:</strong> ${Status}</li>
+              <li><strong>Status:</strong> ECO Pending</li>
           </ul>
           <div class="request-details">
               <p><strong>Request:</strong></p>
@@ -753,7 +752,7 @@ router.patch("/requests/eco", async (req, res) => {
           .catch((error: any) => {
             console.error(error)
           })
-      } else if (Status === "Pending" && Assigned_To){
+      } else if (Status === "Completed" && Assigned_To){
         const msg = {
           personalizations: [
             {
