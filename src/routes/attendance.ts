@@ -102,7 +102,6 @@ router.get("/attendance", async (req, res) => {
         AND Sequence = (DATEPART(dw, GETDATE()) - 1)
       ORDER BY First_Name ASC;
     `);
-    console.log(attendance);
 
     interface Employee {
       First_Name: string;
@@ -158,7 +157,6 @@ router.get("/attendance", async (req, res) => {
               Attendance_Note_ID: updatedEmployee.Attendance_Note_ID,
               Note_Date: updatedEmployee.Note_Date
             };
-            console.log(allEmployees[matchingIndex]);
           }
         }
 
@@ -180,63 +178,40 @@ router.get("/attendance", async (req, res) => {
       });
     }
 
-    function consolidateEntries(allEmployees: any): any[] {
-      const consolidatedEntries: any[] = [];
-    
-      const groupedEmployees = allEmployees.reduce((groups: any, employee: any) => {
-        const key = `${employee.First_Name}_${employee.Last_Name}`;
-        groups[key] = groups[key] || [];
-        groups[key].push(employee);
-        return groups;
+    function consolidateEntries(allEmployees: any[]) {
+      const consolidatedEntries = [];
+  
+      const groupedEmployees = allEmployees.reduce((groups: any, employee:any) => {
+          const key = `${employee.Employee}`; // Group by Employee ID
+          groups[key] = groups[key] || [];
+          groups[key].push(employee);
+          return groups;
       }, {});
-    
+  
       for (const key in groupedEmployees) {
-        const entries = groupedEmployees[key];
-    
-        const earliestEntry = entries.reduce((earliest: any, current: any) => {
-          return (!earliest.Login || (current.Login && current.Login < earliest.Login)) ? current : earliest;
-        }, {});
-    
-        const latestLogoutEntry = entries.reduce((latest: any, current: any) => {
-          return (latest.Logout || current.Logout && current.Logout > latest.Logout) ? current : latest;
-        }, {});
-    
-        consolidatedEntries.push({
-          ...earliestEntry,
-          Logout: latestLogoutEntry.Logout
-        });
+          const entries = groupedEmployees[key];
+  
+          const earliestEntry = entries.reduce((earliest: any, current:any) => {
+              return (!earliest.Login || (current.Login && new Date(current.Login) < new Date(earliest.Login))) ? current : earliest;
+          }, {});
+  
+          const latestLoginEntry = entries.reduce((latest: any, current: any) => {
+              return (!latest.Login || (current.Login && new Date(current.Login) > new Date(latest.Login))) ? current : latest;
+          }, {});
+  
+          consolidatedEntries.push({
+              ...earliestEntry,
+              Logout: latestLoginEntry.Logout // Use the logout from the latest login entry
+          });
       }
-    
+  
       return consolidatedEntries;
-    }
-        
-    function timeDifference(date1: any, date2: any): any {
-      const startDate = new Date(date1);
-      if (!date2) {
-        return null;
-      }
-      const endDate = new Date(date2);
-    
-      const startDateOffset = startDate.getTimezoneOffset();
-      const endDateOffset = endDate.getTimezoneOffset();
-      startDate.setMinutes(startDate.getMinutes() + startDateOffset);
-      endDate.setMinutes(endDate.getMinutes() + endDateOffset);
-    
-      startDate.setFullYear(2000, 0, 1);
-      endDate.setFullYear(2000, 0, 1);
-    
-      const diff = endDate.getTime() - startDate.getTime();
-      const totalMinutes = diff / (1000 * 60);
-      const decimalMinutes = totalMinutes.toFixed(2);
-    
-      return parseFloat(decimalMinutes);
-    }
-
+  }
     if (allEmployees.length > 0) {
       res.status(200).json({
         status: "success",
         results: allEmployees.length,
-        attendance: consolidateEntries(allEmployees),
+        attendance: [consolidateEntries(allEmployees)][0],
       });
     } else {
       res.status(200).json({
