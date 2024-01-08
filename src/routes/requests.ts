@@ -80,26 +80,22 @@ router.get("/requests/entries", async (req, res) => {
         const shopArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Shop_Request]
-            `,
+            FROM [General_Label].[dbo].[Shop_Request]`,
         );
         const safetyArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Safety_Request]
-            `,
+            FROM [General_Label].[dbo].[Safety_Request]`,
         );
         const maintenanceArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Maintenance_Request]
-            `,
+            FROM [General_Label].[dbo].[Maintenance_Request]`,
         );
         const improvementArray = await glDB.query(
             `
             SELECT * 
-            FROM [General_Label].[dbo].[Improvement_Request]
-            `,
+            FROM [General_Label].[dbo].[Improvement_Request]`,
         );
 
         maintenanceArray[0].forEach((obj: any) => {
@@ -116,7 +112,10 @@ router.get("/requests/entries", async (req, res) => {
         }
         });
 
-        const entries = shopArray[0].concat(maintenanceArray[0]).concat(improvementArray[0]).concat(safetyArray[0]);
+        const entries = shopArray[0]
+        .concat(maintenanceArray[0])
+        .concat(improvementArray[0])
+        .concat(safetyArray[0]);
 
         if (entries.length > 0) {
             res.status(200).json({
@@ -127,6 +126,33 @@ router.get("/requests/entries", async (req, res) => {
             res.status(200).json({
                 status:"success",
                 entries: [],           
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
+router.get("/requests/vacation", async (req, res) => {
+    try {
+        const vacations = await glDB.query(
+            `
+            SELECT *
+            FROM [General_Label].[dbo].[Time_Off_Request]`
+        )
+        if (vacations.length > 0) {
+            res.status(200).json({
+                status: "success",
+                vacations: vacations[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                vacations: [],           
             });
         }
     } catch (error: any) {
