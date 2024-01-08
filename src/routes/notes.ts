@@ -906,51 +906,53 @@ router.patch("/requests/time-off", async (req, res) => {
       };
       await upsert(TimeOffRequest, condition, values);
 
-    //   if (!Request_ID) {
-    //     const date = new Date()
+      if (!Request_ID) {
+        const date = new Date()
+        const Start = new Date(Start_Date);
+        const End = new Date(End_Date);
 
-    //     var maintenanceHTML = `
-    //     <div class="maintenance-request">
-    //       <h2>Maintenance Request</h2>
-    //       <ul>
-    //           <li><strong>Initiator:</strong> ${Initiator}</li>
-    //           <li><strong>Date:</strong> ${date.toLocaleString()}</li>
-    //           <li><strong>Subject:</strong> ${Subject}</li>
-    //           <li><strong>Work Center:</strong> ${Work_Center}</li>
-    //           <li><strong>Priority:</strong> ${Priority}</li>
-    //       </ul>
-    //       <div class="request-details">
-    //           <p><strong>Maintenance Request:</strong></p>
-    //           <p>${Request}</p>
-    //       </div>
-    //     </div>
-    //     `;
+        var vacationHTML = `
+        <div class="vacation-request">
+          <h2>Vacation Request</h2>
+          <ul>
+              <li><strong>Initiator:</strong> ${Initiator}</li>
+              <li><strong>Date:</strong> ${date.toLocaleString()}</li>
+              <li><strong>Status:</strong> ${Status}</li>
+              <li><strong>Start Date:</strong> ${Start.toLocaleDateString()}</li>
+              <li><strong>End Date:</strong> ${End.toLocaleDateString()}</li>
+          </ul>
+          <div class="request-details">
+              <p><strong>Vacation Request Details:</strong></p>
+              <p>${Request}</p>
+          </div>
+        </div>
+        `;
 
-    //     const msg = {
-    //       personalizations: [
-    //         {
-    //           "to": [
-    //             {
-    //               "email": "jason@general-label.com"
-    //             },
-    //             {
-    //               "email": "sumitm@general-label.com"
-    //             },
-    //           ]
-    //         }], // Change to your recipient
-    //       from: 'gliteam@general-label.com', // Change to your verified sender
-    //       subject: `New Maintenance Request`,
-    //       html: maintenanceHTML,
-    //     }
-    //     sgMail
-    //       .send(msg)
-    //       .then(() => {
-    //         console.log('Email sent')
-    //       })
-    //       .catch((error: any) => {
-    //         console.error(error)
-    //       })
-      // }
+        const msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "sumitm@general-label.com"
+                },
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }], // Change to your recipient
+          from: 'gliteam@general-label.com', // Change to your verified sender
+          subject: `New Vacation Request`,
+          html: vacationHTML,
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
+      }
     };
     res.status(200).json({
       status: "success",
