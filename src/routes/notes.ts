@@ -933,11 +933,8 @@ router.patch("/requests/time-off", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "sumitm@general-label.com"
-                },
-                {
-                  "email": "spencererie01@gmail.com"
-                },
+                  "email": "pauls@general-label.com"
+                }
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
