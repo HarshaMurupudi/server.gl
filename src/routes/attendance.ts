@@ -15,8 +15,8 @@ router.get("/attendance", async (req, res) => {
         t1.Last_Name,
         t1.Shift,
         t1.Type,
-        t2.Login,
-        t2.Logout,
+        t2.Adjusted_Login,
+        t2.Adjusted_Logout,
         t3.Attendance_Note,
         t3.Attendance_Note_ID,
         COALESCE(t4.Start_Time, '1900-01-01T00:00:00.000Z') AS Start_Time,
@@ -26,7 +26,7 @@ router.get("/attendance", async (req, res) => {
       FROM [Production].[dbo].[Employee] AS t1
       LEFT JOIN [Production].[dbo].[Attendance] AS t2
         ON t1.Employee = t2.Employee
-        AND CAST(t2.Login AS Date) = CAST(GETDATE() AS Date)
+        AND CAST(t2.Adjusted_Login AS Date) = CAST(GETDATE() AS Date)
       LEFT JOIN [General_Label].[dbo].[Attendance_Notes] AS t3
         ON t1.First_Name = t3.First_Name
         AND t1.Last_Name = t3.Last_Name
@@ -115,8 +115,8 @@ router.get("/attendance", async (req, res) => {
       First_Name: string;
       Last_Name: string;
       Type: string;
-      Login: string;
-      Logout: string;
+      Adjusted_Login: string;
+      Adjusted_Logout: string;
       Attendance_Note: string | null;
       Attendance_Note_ID: number | null;
       Note_Date: Date | null;
@@ -192,16 +192,16 @@ router.get("/attendance", async (req, res) => {
           const entries = groupedEmployees[key];
   
           const earliestEntry = entries.reduce((earliest: any, current:any) => {
-              return (!earliest.Login || (current.Login && new Date(current.Login) < new Date(earliest.Login))) ? current : earliest;
+              return (!earliest.Adjusted_Login || (current.Adjusted_Login && new Date(current.Adjusted_Login) < new Date(earliest.Adjusted_Login))) ? current : earliest;
           }, {});
   
           const latestLoginEntry = entries.reduce((latest: any, current: any) => {
-              return (!latest.Login || (current.Login && new Date(current.Login) > new Date(latest.Login))) ? current : latest;
+              return (!latest.Adjusted_Login || (current.Adjusted_Login && new Date(current.Adjusted_Login) > new Date(latest.Adjusted_Login))) ? current : latest;
           }, {});
   
           consolidatedEntries.push({
               ...earliestEntry,
-              Logout: latestLoginEntry.Logout // Use the logout from the latest login entry
+              Adjusted_Logout: latestLoginEntry.Adjusted_Logout // Use the logout from the latest login entry
           });
       }
   
