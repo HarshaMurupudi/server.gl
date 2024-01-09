@@ -85,14 +85,22 @@ router.get("/attendance/events", async (req, res) => {
             if (currentStartDate && currentEndDate) {
               const fullName = `${event.First_Name} ${event.Last_Name}`;
               let title = "";
-              if (event.Attendance_Type === 2) {
+              let type = null;
+              if (event.Attendance_Type == 2) {
                 title = `${fullName} - Vacation`;
-              } else {
+                type = 2;
+              } else if (event.Attendance_Type == 3) {
                 title = `${fullName} - Sick`;
+                type = 3;
+                console.log(fullName);
+              } else {
+                title = `${fullName}`;
+                type = 1;
               }
               const formattedEvent = {
                 id: eventCount,
                 title,
+                type,
                 allDay: true,
                 start: new Date(currentStartDate).getTime() + (12 * 60 * 60 * 1000),
                 end: new Date(currentEndDate).getTime() + (12 * 60 * 60 * 1000),
@@ -110,11 +118,24 @@ router.get("/attendance/events", async (req, res) => {
         // add the last consecutive event for the employee, if any
         if (currentStartDate && currentEndDate) {
           const fullName = `${events[0].First_Name} ${events[0].Last_Name}`;
-          const title = `${fullName} - Vacation`;
+          let title = null;
+          let type = null;
+          if (events[0].Attendance_Type == 2) {
+            title = `${fullName} - Vacation`;
+            type = 2;
+          } else if (events[0].Attendance_Type == 3) {
+            title = `${fullName} - Sick`;
+            type = 3;
+            console.log(fullName);
+          } else {
+            title = `${fullName}`;
+            type = 1;
+          }
 
           const formattedEvent = {
             id: eventCount,
             title,
+            type,
             allDay: true,
             start: new Date(currentStartDate).getTime() + (12 * 60 * 60 * 1000),
             end: (new Date(currentEndDate).getTime() + (12 * 60 * 60 * 1000)),
