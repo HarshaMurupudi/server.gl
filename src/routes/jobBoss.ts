@@ -19,51 +19,47 @@ var opt = function (method: string, arg1: string, arg2: string, id: any) {
   });
 };
 
-router.get(
-  "/jobBoss/:jobID/:status",
-  [auth],
-  async (req: any, res: Response) => {
-    try {
-      const { jobID, status } = req.params;
+router.get("/jobBoss/:jobID/:status", async (req: any, res: Response) => {
+  try {
+    const { jobID, status } = req.params;
 
-      // get and set parent job
+    // get and set parent job
 
-      // get and set all sub jobs
-      const subJobs = await glDB.query(
-        `
+    // get and set all sub jobs
+    const subJobs = await glDB.query(
+      `
           SELECT [Component_Job]
           FROM [Production].[dbo].[Bill_Of_Jobs]
           WHERE Parent_Job = :jobID; 
         `,
-        {
-          replacements: {
-            jobID,
-          },
-          type: glDB.QueryTypes.SELECT,
-        }
-      );
-      const subJobList = subJobs.map((job: any) => job.Component_Job);
-
-      await opt("SetJobStatus", jobID, status, req.user.id);
-      for (const subJob of subJobList) {
-        console.log(subJob, "sub job hit")
-        await opt("SetJobStatus", subJob, status, req.user.id);
+      {
+        replacements: {
+          jobID,
+        },
+        type: glDB.QueryTypes.SELECT,
       }
+    );
+    const subJobList = subJobs.map((job: any) => job.Component_Job);
 
-      res.status(200).json({
-        status: "success",
-        message: `Job status updated to ${status}`,
-        //   results: po.length,
-        //   po: po,
-      });
-    } catch (error: any) {
-      console.log(error);
-      res.status(400).json({
-        status: "Error",
-        message: error.message,
-      });
+    await opt("SetJobStatus", jobID, status, req.user.id);
+    for (const subJob of subJobList) {
+      console.log(subJob, "sub job hit");
+      await opt("SetJobStatus", subJob, status, req.user.id);
     }
+
+    res.status(200).json({
+      status: "success",
+      message: `Job status updated to ${status}`,
+      //   results: po.length,
+      //   po: po,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
   }
-);
+});
 
 module.exports = router;
