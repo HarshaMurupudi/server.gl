@@ -11,6 +11,7 @@ import {
 const JobModel = require("../models/Job");
 const Operation = require("../models/Operation");
 const Delivery = require("../models/Delivery");
+const Guide = require("../models/Guide");
 const router = express.Router();
 const { glDB } = require("../config/database");
 
@@ -471,6 +472,72 @@ router.get("/jobs", async (req, res) => {
   }
 });
 
+router.get("/guides", async (req, res) => {
+  try {
+    let jobs = await Guide.findAll({
+      where: {
+        ...req.query,
+      },
+      raw: true,
+    });
+
+    if (jobs.length > 0) {
+      jobs = jobs.map(job => {
+        const estimatedCost = (
+          job.Est_Labor +
+          job.Est_Material +
+          job.Est_Service +
+          job.Est_Labor_Burden +
+          job.Est_Machine_Burden +
+          job.Est_GA_Burden
+        );
+
+        const actualCost = (
+          job.Act_Labor +
+          job.Act_Material +
+          job.Act_Service +
+          job.Act_Labor_Burden +
+          job.Act_Machine_Burden +
+          job.Act_GA_Burden
+        );
+        if(job.Job === '176443A'){
+          console.log("Labor: $" + job.Act_Labor);
+          console.log("Material: $" + job.Act_Material);
+          console.log("Service: $" + job.Act_Service);
+          console.log("Labor Burden: $" + job.Act_Labor_Burden);
+          console.log("Machine Burden: $" + job.Act_Machine_Burden);
+          console.log("GA Burnde: $" + job.Act_GA_Burden);
+          console.log("Total Cost: $" + actualCost);
+          console.log("Missing Cost: $" + Math.round(5086.34 - actualCost).toFixed(2));
+        }
+        let profit = 0;
+        if (actualCost !== 0 && estimatedCost !==0) {
+          profit = ((job.Act_Revenue - actualCost) / job.Act_Revenue) * 100;
+        }
+
+        return {
+          ...job,
+          Estimated: estimatedCost,
+          Actual: actualCost,
+          Profit: profit,
+        };
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      results: jobs.length,
+      jobs: jobs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+});
+
 router.get("/jobs/on-hand-qty", async (req, res) => {
   try {
     const oJobs = await JobModel.findAll({
@@ -828,21 +895,20 @@ router.get("/delivery/shiplines", async (req, res) => {
   }
 });
 
-router.get("/jobs/search", async (req, res) => {
+router.get("/guides/search", async (req, res) => {
   try {
     let query = {
       where: { [req.query.column]: { [Op.like]: req.query.value + "%" } },
       attributes: [req.query.column],
-      limit: 6,
     };
 
-    const jobs = await JobModel.findAll(query);
-    const flatJobs = [...new Set(jobs.map((item) => item[req.query.column]))];
+    const guides = await Guide.findAll(query);
+    const flatGuides = [...new Set(guides.map((item) => item[req.query.column]))];
 
     res.status(200).json({
       status: "success",
-      results: flatJobs.length,
-      jobs: flatJobs,
+      results: flatGuides.length,
+      guides: flatGuides,
     });
   } catch (error) {
     console.log(error);
