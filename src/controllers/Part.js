@@ -13,7 +13,7 @@ class PartController {
 
     const jobs = await glDB.query(
       `SELECT * FROM [Production].[dbo].[Job]
-      WHERE Order_Date = :orderDate;
+      WHERE Order_Date >= :orderDate;
       `,
       {
         replacements: {
