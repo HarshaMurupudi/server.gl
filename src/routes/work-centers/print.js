@@ -69,7 +69,8 @@ router.get('/print/jobsByWorkCenter/:workCenterName', async (req, res) => {
               Colors,
               Print_Pcs,
               Number_Up,
-              Press
+              Press,
+              del.Comment
               FROM [dbo].[Job] AS j
               LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
 
@@ -164,7 +165,8 @@ router.get('/print/jobs/open/:workCenterName', async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
 
           
@@ -275,7 +277,8 @@ router.get('/print/jobs/open/:workCenterName/now-at', async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
 
           LEFT JOIN

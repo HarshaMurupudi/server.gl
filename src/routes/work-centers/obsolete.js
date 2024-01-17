@@ -70,7 +70,8 @@ router.get('/obsolete/jobsByWorkCenter/:workCenterName', async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
             FROM [dbo].[Job] AS j
             LEFT JOIN
             (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
@@ -162,7 +163,8 @@ router.get('/obsolete/jobs/open/:workCenterName', async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
           (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
           ON j.User_Values = u.U_User_Values
@@ -273,7 +275,8 @@ router.get('/obsolete/jobs/open/:workCenterName/now-at', async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
           (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
           ON j.User_Values = u.U_User_Values
