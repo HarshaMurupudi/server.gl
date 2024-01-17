@@ -621,10 +621,11 @@ router.patch("/requests/safety", async (req, res) => {
   }
 });
 
-router.patch("/request/eco", async (req, res) => {
+router.patch("/requests/eco", async (req, res) => {
   try {
+    console.log(req.body);
     const {
-      data: { form },
+      data: { form, user },
     } = req.body;
 
     for (const {
@@ -658,7 +659,7 @@ router.patch("/request/eco", async (req, res) => {
         Eco_Type,
         Priority,
         Request,
-        Approver: Status === "Completed" && !Approver ? Assigned_To : Approver,
+        Approver: Status === "Completed" && !Approver || Status === "Pending" && !Approver ? user : Approver,
         Approval_Comment,
         Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
@@ -683,7 +684,8 @@ router.patch("/request/eco", async (req, res) => {
             <p><strong>Request:</strong></p>
             <p>${Request}</p>
         </div>
-        <a href="http://10.0.0.177:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+        <a href="http://10.0.0.7:3000/request/approval/eco" target="_blank">Approve ECO Request</a>
+        <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
       </div>
       `;
 
@@ -707,7 +709,8 @@ router.patch("/request/eco", async (req, res) => {
               <p><strong>Approval Comment:</strong></p>
               <p>${Approval_Comment}</p>
           </div>
-          <a href="http://10.0.0.177:3000/eco" target="_blank">Create ECO</a>
+          <a href="http://10.0.0.7:3000/eco" target="_blank">Create ECO</a>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
         </div>
       `;
 
