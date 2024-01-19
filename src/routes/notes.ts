@@ -477,6 +477,7 @@ router.patch("/requests/shop", async (req, res) => {
               <p><strong>Request:</strong></p>
               <p>${Request}</p>
           </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
         </div>
         `;
 
@@ -489,9 +490,6 @@ router.patch("/requests/shop", async (req, res) => {
                 },
                 {
                   "email": "sumitm@general-label.com"
-                },
-                {
-                  "email": "spencererie01@gmail.com"
                 },
               ]
             }], // Change to your recipient
@@ -574,6 +572,7 @@ router.patch("/requests/safety", async (req, res) => {
                   <p><strong>Report Description:</strong></p>
                   <p>${Request}</p>
               </div>
+              <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
            </div>
         `;
         const msg = {
@@ -834,6 +833,7 @@ router.patch("/requests/maintenance", async (req, res) => {
               <p><strong>Maintenance Request:</strong></p>
               <p>${Request}</p>
           </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
         </div>
         `;
 
@@ -879,7 +879,7 @@ router.patch("/requests/maintenance", async (req, res) => {
 router.patch("/requests/time-off", async (req, res) => {
   try {
     const {
-      data: { form },
+      data: { form, user },
     } = req.body;
 
     for (const {
@@ -903,10 +903,11 @@ router.patch("/requests/time-off", async (req, res) => {
         Start_Date,
         End_Date,
         Request,
-        Approver,
+        Approver: Status === "Completed" && !Approver || Status === "Pending" && !Approver ? user : Approver,
         Approval_Comment,
         Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
+      console.log("hit");
       await upsert(TimeOffRequest, condition, values);
 
       if (!Request_ID) {
@@ -928,6 +929,7 @@ router.patch("/requests/time-off", async (req, res) => {
               <p><strong>Vacation Request Details:</strong></p>
               <p>${Request}</p>
           </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
         </div>
         `;
 
@@ -936,8 +938,8 @@ router.patch("/requests/time-off", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "pauls@general-label.com"
-                }
+                  "email": "sumitm@general-label.com"
+                },
               ]
             }], // Change to your recipient
           from: 'gliteam@general-label.com', // Change to your verified sender
@@ -1025,6 +1027,7 @@ router.patch("/requests/improvement", async (req, res) => {
               <p><strong>Request:</strong></p>
               <p>${Request}</p>
           </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
         </div>
         `;
         const msg = {
