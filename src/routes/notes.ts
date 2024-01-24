@@ -22,6 +22,8 @@ const MeetingNotes = require("../models/notes/MeetingNotes");
 const TrainingLogNotes = require("../models/notes/TrainingLogNotes");
 const TrainingNotes = require("../models/notes/TrainingNotes");
 const HoldNotes = require("../models/notes/HoldNotes");
+const DiecutNotes = require("../models/notes/DiecutNotes");
+const EmbossNotes = require("../models/notes/EmbossNotes");
 
 const PendingJobsNotes = require("../models/notes/PendingJobsNotes");
 
@@ -312,6 +314,123 @@ router.patch("/attendance/notes", async (req, res) => {
     });
   } catch (error: any) {
     console.log(error);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/diecut/notes", async (req, res) => {
+  try {
+    const {
+      data: { cut },
+    } = req.body;
+    for (const {
+      Die_ID,
+      Die_Number = null,
+      Date = null,
+      Art_Number = null,
+      Part_Number = null,
+      Material = null,
+      Lamination = null,
+      Impressions = null,
+      Adhesive = null,
+      Cut_Type = null,
+      Press = null,
+      Makeready = null,
+      Pad = null,
+      Platen = null,
+      Signature = null,
+      Note = null
+    } of cut ){
+      if (Die_ID) {
+        const condition = { Die_ID };
+        const values = { 
+          Die_Number, 
+          Date, 
+          Art_Number,
+          Part_Number,
+          Material,
+          Lamination,
+          Impressions,
+          Adhesive,
+          Cut_Type,
+          Press,
+          Makeready,
+          Pad,
+          Platen,
+          Signature,
+          Note
+        };
+
+        await upsert(DiecutNotes, condition, values);
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+
+    res.status(400).json({
+      status: "Error",
+      message: `${error.message}`,
+    });
+  }
+});
+
+router.patch("/emboss/notes", async (req, res) => {
+  try {
+    const {
+      data: { emb },
+    } = req.body;
+    for (const {
+      Die_ID,
+      Die_Number = null,
+      Date = null,
+      Art_Number = null,
+      Part_Number = null,
+      Material = null,
+      Ink_Layers = null,
+      Impressions = null,
+      Dwell = null,
+      Emboss_Height = null,
+      Heat = null,
+      Makeready = null,
+      Pad = null,
+      Platen = null,
+      Signature = null,
+      Note = null
+    } of emb ){
+      if (Die_ID) {
+        const condition = { Die_ID };
+        const values = { 
+          Die_Number, 
+          Date, 
+          Art_Number,
+          Part_Number,
+          Material,
+          Ink_Layers,
+          Impressions,
+          Dwell,
+          Emboss_Height,
+          Heat,
+          Makeready,
+          Pad,
+          Platen,
+          Signature,
+          Note
+        };
+        await upsert(EmbossNotes, condition, values);
+      }
+    }
+    res.status(200).json({
+      status: "success",
+    });
+  } catch (error: any) {
+    console.log(error.message);
 
     res.status(400).json({
       status: "Error",
