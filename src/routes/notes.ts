@@ -325,7 +325,7 @@ router.patch("/attendance/notes", async (req, res) => {
 router.patch("/diecut/notes", async (req, res) => {
   try {
     const {
-      data: { cut },
+      data: { form } ,
     } = req.body;
     for (const {
       Die_ID,
@@ -344,7 +344,7 @@ router.patch("/diecut/notes", async (req, res) => {
       Platen = null,
       Signature = null,
       Note = null
-    } of cut ){
+    } of form ){
       if (Die_ID) {
         const condition = { Die_ID };
         const values = { 
@@ -364,12 +364,13 @@ router.patch("/diecut/notes", async (req, res) => {
           Signature,
           Note
         };
-
+        
         await upsert(DiecutNotes, condition, values);
       }
     }
     res.status(200).json({
       status: "success",
+      message: form,
     });
   } catch (error: any) {
     console.log(error.message);
@@ -384,7 +385,7 @@ router.patch("/diecut/notes", async (req, res) => {
 router.patch("/emboss/notes", async (req, res) => {
   try {
     const {
-      data: { emb },
+      data: { form },
     } = req.body;
     for (const {
       Die_ID,
@@ -403,7 +404,7 @@ router.patch("/emboss/notes", async (req, res) => {
       Platen = null,
       Signature = null,
       Note = null
-    } of emb ){
+    } of form ){
       if (Die_ID) {
         const condition = { Die_ID };
         const values = { 
@@ -428,6 +429,7 @@ router.patch("/emboss/notes", async (req, res) => {
     }
     res.status(200).json({
       status: "success",
+      message: form
     });
   } catch (error: any) {
     console.log(error.message);
