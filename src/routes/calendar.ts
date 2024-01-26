@@ -25,7 +25,7 @@ router.get("/attendance/events", async (req, res) => {
         WHERE 
         t2.Attendance_Type > 1
         AND t2.Work_Date > dateadd(WEEK, -2, GETDATE())
-        AND t2.Work_Date < dateadd(MONTH, 6, GETDATE())
+        AND t2.Work_Date < dateadd(MONTH, 12, GETDATE())
     `);
 
     // const holidays = await glDB.query(`
