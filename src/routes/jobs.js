@@ -1,24 +1,27 @@
-import express, { Request, Response } from "express";
-import fs from "fs";
-import { Op, DATE } from "sequelize";
-const path = require("path");
+import express, { Request, Response } from 'express';
+import fs from 'fs';
+import { Op, DATE } from 'sequelize';
+const path = require('path');
+const PDFDocument = require('pdfkit');
 
 import {
   folderController,
   jobController,
   partController,
-} from "../controllers";
-const JobModel = require("../models/Job");
-const Operation = require("../models/Operation");
-const Delivery = require("../models/Delivery");
+} from '../controllers';
+const JobModel = require('../models/Job');
+const Operation = require('../models/Operation');
+const Delivery = require('../models/Delivery');
 const router = express.Router();
-const { glDB } = require("../config/database");
+const { glDB } = require('../config/database');
+
+const doc = new PDFDocument();
 
 DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
   // Z here means current timezone, _not_ UTC
   // return date.format('YYYY-MM-DD HH:mm:ss.SSS Z');
-  return date.format("YYYY-MM-DD HH:mm:ss.SSS");
+  return date.format('YYYY-MM-DD HH:mm:ss.SSS');
 };
 
 const create = (dir, structure, cb = null) => {
@@ -58,23 +61,23 @@ function compare(a, b) {
   return 0;
 }
 
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     // const jobs = [await Job.findAll({ limit: 50 })];
 
-    const { startDate = new Date(), endDate = "" } = req.query;
+    const { startDate = new Date(), endDate = '' } = req.query;
 
     var sdtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
     var sd = new Date(startDate);
     var sdlocalISOTime = new Date(sd - sdtzoffset).toISOString().slice(0, -1);
 
-    const sdfDate = sdlocalISOTime.split("T")[0];
+    const sdfDate = sdlocalISOTime.split('T')[0];
 
     var edtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
     var ed = new Date(endDate);
     var edlocalISOTime = new Date(ed - edtzoffset).toISOString().slice(0, -1);
 
-    const edfDate = edlocalISOTime.split("T")[0];
+    const edfDate = edlocalISOTime.split('T')[0];
 
     const jobs = await glDB.query(
       `
@@ -165,36 +168,36 @@ router.get("/", async (req, res) => {
     );
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/now-at", async (req, res) => {
+router.get('/now-at', async (req, res) => {
   try {
     // const jobs = [await Job.findAll({ limit: 50 })];
 
-    const { startDate = new Date(), endDate = "" } = req.query;
+    const { startDate = new Date(), endDate = '' } = req.query;
 
     var sdtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
     var sd = new Date(startDate);
     var sdlocalISOTime = new Date(sd - sdtzoffset).toISOString().slice(0, -1);
 
-    const sdfDate = sdlocalISOTime.split("T")[0];
+    const sdfDate = sdlocalISOTime.split('T')[0];
 
     var edtzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
     var ed = new Date(endDate);
     var edlocalISOTime = new Date(ed - edtzoffset).toISOString().slice(0, -1);
 
-    const edfDate = edlocalISOTime.split("T")[0];
+    const edfDate = edlocalISOTime.split('T')[0];
 
     const jobs = await glDB.query(
       `
@@ -331,45 +334,45 @@ router.get("/now-at", async (req, res) => {
       });
 
       const filteredJobs = jobsWithData.filter(
-        (fJob) => fJob.Status === "S" || fJob.Status === "O"
+        (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
       );
 
       const filteredCompletedJobs = jobsWithData.filter(
-        (fJob) => fJob.Status === "C"
+        (fJob) => fJob.Status === 'C'
       );
 
       const sortedCompletedJobs = filteredCompletedJobs.sort(compare);
       const sortedJobs = filteredJobs.sort(compare);
 
       if (sortedJobs.length > 0) {
-        job["Now At"] = sortedJobs[0]["Work_Center"];
+        job['Now At'] = sortedJobs[0]['Work_Center'];
       }
 
-      if (job["Status"] === "Complete" && sortedCompletedJobs.length > 0) {
-        job["Now At"] =
-          sortedCompletedJobs[sortedCompletedJobs.length - 1]["Work_Center"];
+      if (job['Status'] === 'Complete' && sortedCompletedJobs.length > 0) {
+        job['Now At'] =
+          sortedCompletedJobs[sortedCompletedJobs.length - 1]['Work_Center'];
       }
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/part-number/:partID", async (req, res) => {
+router.get('/part-number/:partID', async (req, res) => {
   try {
     const { partID: partValue } = req.params;
-    const partID = partValue.split("_")[0];
-    var isWin = process.platform === "win32";
+    const partID = partValue.split('_')[0];
+    var isWin = process.platform === 'win32';
 
     const filePath = isWin
       ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
@@ -382,7 +385,7 @@ router.get("/part-number/:partID", async (req, res) => {
 
     const allFiles = fs.readdirSync(filePath);
     const pdf = allFiles.filter(
-      (name) => name.includes(".pdf") && !name.startsWith(".")
+      (name) => name.includes('.pdf') && !name.startsWith('.')
     );
 
     const fileName = pdf;
@@ -391,28 +394,28 @@ router.get("/part-number/:partID", async (req, res) => {
       res.download(filePath + fileName);
     } else {
       res.status(400).json({
-        status: "Error",
-        message: "No file",
+        status: 'Error',
+        message: 'No file',
       });
     }
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
       code: error.code,
     });
   }
 });
 
-router.get("/job-image/:jobID", async (req, res) => {
+router.get('/job-image/:jobID', async (req, res) => {
   try {
     const { jobID } = req.params;
 
     const selectedJob = await Job.findOne({ where: { Job: jobID } });
     const partValue = selectedJob.Part_Number;
-    const partID = partValue.split("_")[0];
-    var isWin = process.platform === "win32";
+    const partID = partValue.split('_')[0];
+    var isWin = process.platform === 'win32';
 
     const filePath = isWin
       ? `\\\\gl-fs01\\GLIParts\\${partID}\\Current\\Prints\\Image\\`
@@ -424,20 +427,20 @@ router.get("/job-image/:jobID", async (req, res) => {
       res.download(filePath + fileName);
     } else {
       res.status(400).json({
-        status: "Error",
-        message: "No file",
+        status: 'Error',
+        message: 'No file',
       });
     }
   } catch (error) {
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
       code: error.code,
     });
   }
 });
 
-router.get("/jobs", async (req, res) => {
+router.get('/jobs', async (req, res) => {
   try {
     const jobs = await JobModel.findAll({
       where: {
@@ -458,20 +461,20 @@ router.get("/jobs", async (req, res) => {
     });
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs.length,
       jobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/on-hand-qty", async (req, res) => {
+router.get('/jobs/on-hand-qty', async (req, res) => {
   try {
     const oJobs = await JobModel.findAll({
       where: {
@@ -526,20 +529,20 @@ router.get("/jobs/on-hand-qty", async (req, res) => {
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs.length,
       jobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/pending", async (req, res) => {
+router.get('/jobs/pending', async (req, res) => {
   try {
     // const jobs = await Job.findAll({ where: { Status: 'Pending' } });
 
@@ -563,20 +566,20 @@ router.get("/jobs/pending", async (req, res) => {
     );
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/pending/quantity", async (req, res) => {
+router.get('/jobs/pending/quantity', async (req, res) => {
   try {
     // const jobs = await Job.findAll({ where: { Status: 'Pending' } });
 
@@ -640,20 +643,20 @@ router.get("/jobs/pending/quantity", async (req, res) => {
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/job-details/:jobID", async (req, res) => {
+router.get('/job-details/:jobID', async (req, res) => {
   try {
     const { jobID } = req.params;
     const jobs = await glDB.query(
@@ -674,23 +677,23 @@ router.get("/job-details/:jobID", async (req, res) => {
     );
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs.length,
       jobs: jobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/search", async (req, res) => {
+router.get('/jobs/search', async (req, res) => {
   try {
     let query = {
-      where: { [req.query.column]: { [Op.like]: req.query.value + "%" } },
+      where: { [req.query.column]: { [Op.like]: req.query.value + '%' } },
       attributes: [req.query.column],
       limit: 6,
     };
@@ -699,20 +702,20 @@ router.get("/jobs/search", async (req, res) => {
     const flatJobs = [...new Set(jobs.map((item) => item[req.query.column]))];
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: flatJobs.length,
       jobs: flatJobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/delivery/shiplines", async (req, res) => {
+router.get('/delivery/shiplines', async (req, res) => {
   try {
     // const jobs = [await Job.findAll({ limit: 50 })];
 
@@ -794,44 +797,44 @@ router.get("/delivery/shiplines", async (req, res) => {
       });
 
       const filteredJobs = jobsWithData.filter(
-        (fJob) => fJob.Status === "S" || fJob.Status === "O"
+        (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
       );
 
       const filteredCompletedJobs = jobsWithData.filter(
-        (fJob) => fJob.Status === "C"
+        (fJob) => fJob.Status === 'C'
       );
 
       const sortedCompletedJobs = filteredCompletedJobs.sort(compare);
       const sortedJobs = filteredJobs.sort(compare);
 
       if (sortedJobs.length > 0) {
-        job["Now At"] = sortedJobs[0]["Work_Center"];
+        job['Now At'] = sortedJobs[0]['Work_Center'];
       }
 
-      if (job["Status"] === "Complete" && sortedCompletedJobs.length > 0) {
-        job["Now At"] =
-          sortedCompletedJobs[sortedCompletedJobs.length - 1]["Work_Center"];
+      if (job['Status'] === 'Complete' && sortedCompletedJobs.length > 0) {
+        job['Now At'] =
+          sortedCompletedJobs[sortedCompletedJobs.length - 1]['Work_Center'];
       }
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/search", async (req, res) => {
+router.get('/jobs/search', async (req, res) => {
   try {
     let query = {
-      where: { [req.query.column]: { [Op.like]: req.query.value + "%" } },
+      where: { [req.query.column]: { [Op.like]: req.query.value + '%' } },
       attributes: [req.query.column],
       limit: 6,
     };
@@ -840,38 +843,38 @@ router.get("/jobs/search", async (req, res) => {
     const flatJobs = [...new Set(jobs.map((item) => item[req.query.column]))];
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: flatJobs.length,
       jobs: flatJobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/latest", async (req, res) => {
+router.get('/jobs/latest', async (req, res) => {
   try {
     const jobs = await jobController.getLatestJobs();
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs.length,
       jobs: jobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/jobs/onHold", async (req, res) => {
+router.get('/jobs/onHold', async (req, res) => {
   try {
     const jobs = await glDB.query(
       `
@@ -912,65 +915,179 @@ router.get("/jobs/onHold", async (req, res) => {
       `
     );
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       contracts: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.post("/jobs/folder/:job", async (req, res) => {
+router.post('/jobs/folder/:job', async (req, res) => {
   try {
     const { job } = req.params;
     await folderController.createJob(job);
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
     });
   } catch (error) {
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
       code: error.code,
     });
   }
 });
 
-router.get("/parts/latest", async (req, res) => {
+router.get('/parts/latest', async (req, res) => {
   try {
     const jobs = await partController.getLatestParts();
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs.length,
       jobs: jobs,
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.post("/parts/folder/:partNumber", async (req, res) => {
+router.post('/parts/folder/:partNumber', async (req, res) => {
   try {
     const { partNumber } = req.params;
     await folderController.createPart(partNumber);
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
     });
   } catch (error) {
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
+      message: error.message,
+      code: error.code,
+    });
+  }
+});
+
+router.get('/jobs/:job/cert', async (req, res) => {
+  const { job } = req.params;
+
+  try {
+    const jobs = await glDB.query(
+      `
+        SELECT 
+          Job,
+          Production_Notes,
+          Sales_Notes,
+          Engineering_Notes,
+          Job_Plan,
+          Customer_PO,
+          Part_Number,
+          Customer,
+          Status, 
+          Description,
+          Order_Quantity,
+          Promised_Quantity,
+          Completed_Quantity,
+          Promised_Date,
+          Requested_Date,
+          Ship_By_Date,
+          Lead_Days,
+          Rev,
+          Text5,
+          DeliveryKey,
+          Sales_Code,
+          Note_Text,
+          Unit_Price,
+          Ship_Via,
+          Shipped_Quantity,
+          Quote,
+          Production_Status,
+          Numeric2,
+          Comment,
+          Colors,
+          Print_Pcs,
+          Number_Up,
+          Press,
+          Process
+        FROM 
+        (
+          SELECT DISTINCT 
+            (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
+            t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
+            cast (t1.Note_Text as nvarchar(max)) as Note_Text,
+            t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
+            t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
+            Completed_Quantity, Promised_Date, t1.Sales_Code,
+            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
+            Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
+            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process
+          FROM [Production].[dbo].[Job] AS t1           
+            INNER JOIN 
+            (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
+              WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
+            LEFT JOIN
+            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
+              ON t1.User_Values = u.U_User_Values
+            
+
+              LEFT JOIN 
+              (SELECT User_Values, Customer FROM [Production].[dbo].[Customer]) as c
+              ON t1.Customer = c.Customer
+       
+              LEFT JOIN
+              (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
+              ON c.User_Values = u2.User_Values
+
+              LEFT JOIN
+              (SELECT Job, DeliveryKey, Comment FROM [Production].[dbo].Delivery) as d
+              ON t2.DeliveryKey = d.DeliveryKey
+
+            WHERE t1.Status IN ('Active', 'Complete')
+            ) a
+        WHERE Job = :job;
+      `,
+      {
+        replacements: {
+          job,
+        },
+      }
+    );
+
+    console.log(jobs[0]);
+
+    const doc = new PDFDocument();
+
+    // Pipe its output somewhere, like to a file or HTTP response
+    // See below for browser usage
+    doc.pipe(fs.createWriteStream('output.pdf'));
+
+    // Embed a font, set the font size, and render some text
+    doc.fontSize(16).text(`CERTIFICATE OF CONFORMANCE`, 10, 10);
+    // doc.fontSize(25).text(`Some ${job} with an embedded font!`, 100, 100);
+
+    doc.moveTo(0, 25).lineTo(doc.page.width, 25).stroke();
+
+    doc.pipe(res);
+
+    doc.end();
+  } catch (error) {
+    // await res.download(filePath + fileName);
+
+    console.log(error);
+    res.status(400).json({
+      status: 'Error',
       message: error.message,
       code: error.code,
     });
