@@ -53,6 +53,7 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+*.pdf
 
 # misc
 .DS_Store
