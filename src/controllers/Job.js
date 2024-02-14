@@ -35,7 +35,7 @@ class JobController {
 
     const allJobs = [...newJobs[0], ...oldJobs[0]];
 
-    const parentJobs = [];
+    let parentJobs = [];
     for (const jb of allJobs) {
       const subJobs = await glDB.query(
         `
@@ -53,6 +53,27 @@ class JobController {
 
       if (!subJobs.length > 0) {
         parentJobs.push(jb);
+      }
+
+      if (jb.Status == 'Template') {
+        // get and set all sub jobs
+        const subJobs = await glDB.query(
+          `
+          SELECT [Component_Job]
+          FROM [Production].[dbo].[Bill_Of_Jobs]
+          WHERE Parent_Job = :jobID; 
+        `,
+          {
+            replacements: {
+              jobID: job.Job,
+            },
+            type: glDB.QueryTypes.SELECT,
+          }
+        );
+
+        const subJobList = subJobs.map((job) => job.Component_Job);
+
+        parentJobs = [...parentJobs, ...subJobList];
       }
     }
 
