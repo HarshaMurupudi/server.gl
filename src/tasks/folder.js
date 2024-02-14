@@ -13,41 +13,10 @@ module.exports = () => {
 
     // get all new jobs with no folders
     const jobs = await jobController.getLatestJobs();
-    const parentJobs = jobs.filter((job) => job.Job == job.Top_Lvl_Job);
 
-    for (const job of parentJobs) {
+    for (const job of jobs) {
       // create job folders
       const { Job } = job;
-
-      // check if this is child job
-
-      // if template create job folders for children
-      if (job.Status === 'Template') {
-        // get and set all sub jobs
-        const subJobs = await glDB.query(
-          `
-          SELECT [Component_Job]
-          FROM [Production].[dbo].[Bill_Of_Jobs]
-          WHERE Parent_Job = :jobID; 
-        `,
-          {
-            replacements: {
-              jobID: job.Job,
-            },
-            type: glDB.QueryTypes.SELECT,
-          }
-        );
-
-        const subJobList = subJobs.map((job) => job.Component_Job);
-
-        for (const subJob of subJobList) {
-          try {
-            await folderController.createJob(subJob);
-          } catch (error) {
-            console.log(error);
-          }
-        }
-      }
 
       try {
         await folderController.createJob(Job);

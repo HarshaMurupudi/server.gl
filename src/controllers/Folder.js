@@ -1,6 +1,5 @@
-import { error } from "console";
-import fs from "fs";
-const path = require("path");
+import fs from 'fs';
+const path = require('path');
 
 const create = (dir, structure, cb = null) => {
   cb = (
@@ -31,7 +30,7 @@ const create = (dir, structure, cb = null) => {
 
 class FolderController {
   async createJob(job) {
-    var isWin = process.platform === "win32";
+    var isWin = process.platform === 'win32';
     const filePath = isWin ? `\\\\gl-fs01\\GLIOrders\\` : `/Volumes/GLIOrders/`;
     const checkFilePath = isWin
       ? `\\\\gl-fs01\\GLIOrders\\${job}\\`
@@ -53,11 +52,11 @@ class FolderController {
         // else console.log("Success");
       });
     } else {
-      throw new Error("Folder already exists");
+      throw new Error('Folder already exists');
     }
   }
   async createPart(partNumber) {
-    var isWin = process.platform === "win32";
+    var isWin = process.platform === 'win32';
     const filePath = isWin ? `\\\\gl-fs01\\GLIParts\\` : `/Volumes/GLIParts/`;
     const checkFilePath = isWin
       ? `\\\\gl-fs01\\GLIParts\\${partNumber}\\`
@@ -73,7 +72,7 @@ class FolderController {
             Cutting: {
               Dies: {},
               Laser: {},
-              "Delta Laser": {},
+              'Delta Laser': {},
               Plotter: {},
             },
             Documents: {},
@@ -97,14 +96,14 @@ class FolderController {
           Quality: {
             Inspection: {
               FAIR: {
-                "CMM File": {},
+                'CMM File': {},
                 Reports: {},
               },
               Production: {},
             },
             Planning: {
-              "Customer Requirements": {},
-              "Internal Quality Control": {},
+              'Customer Requirements': {},
+              'Internal Quality Control': {},
             },
             Returns: {},
           },
@@ -115,12 +114,12 @@ class FolderController {
     if (!fs.existsSync(checkFilePath)) {
       await create(filePath, structure, (err) => {
         if (err) {
-          throw new Error("Error in creating folders");
+          throw new Error('Error in creating folders');
         }
         //  else console.log("Success");
       });
     } else {
-      throw new Error("Folder already exists");
+      throw new Error('Folder already exists');
     }
   }
 }

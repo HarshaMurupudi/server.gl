@@ -22,13 +22,45 @@ class JobController {
       }
     );
 
+    const parentJobs = jobs[0].filter((job) => job.Job == job.Top_Lvl_Job);
+
     //all jobs that don't have folder
 
     const filteredJobs = [];
 
     // for (let cJob of [...jobs[0], ...[{ Job: "Test11" }]]) {
-    for (let cJob of jobs[0]) {
+    for (let cJob of parentJobs) {
       const { Job } = cJob;
+
+      if (cJob.Status == 'Template') {
+        // get and set all sub jobs
+        const subJobs = await glDB.query(
+          `
+          SELECT [Component_Job]
+          FROM [Production].[dbo].[Bill_Of_Jobs]
+          WHERE Parent_Job = :jobID; 
+        `,
+          {
+            replacements: {
+              jobID: job.Job,
+            },
+            type: glDB.QueryTypes.SELECT,
+          }
+        );
+
+        const subJobList = subJobs.map((job) => job.Component_Job);
+
+        for (const subJob of subJobList) {
+          const filePath = isWin
+            ? `\\\\gl-fs01\\GLIOrders\\${subJob}\\`
+            : `/Volumes/GLIOrders/${subJob}/`;
+
+          if (!fs.existsSync(filePath)) {
+            filteredJobs.push(subJob);
+          }
+        }
+      }
+
       const filePath = isWin
         ? `\\\\gl-fs01\\GLIOrders\\${Job}\\`
         : `/Volumes/GLIOrders/${Job}/`;
