@@ -13,9 +13,8 @@ module.exports = () => {
 
     // get all new jobs with no folders
     const jobs = await jobController.getLatestJobs();
-    const parentJobs = jobs.filter((job) => job.Job == job.Top_Lvl_Job);
 
-    for (const job of parentJobs) {
+    for (const job of jobs) {
       // create job folders
       const { Job } = job;
 
