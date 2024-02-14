@@ -11,7 +11,7 @@ class JobController {
     var sdlocalISOTime = new Date(sd - sdtzoffset).toISOString().slice(0, -1);
     const sdfDate = sdlocalISOTime.split('T')[0];
 
-    const jobs = await glDB.query(
+    const newJobs = await glDB.query(
       `SELECT * FROM [Production].[dbo].[Job]
           WHERE Order_Date >= :orderDate;
           `,
@@ -22,7 +22,39 @@ class JobController {
       }
     );
 
-    const parentJobs = jobs[0].filter((job) => job.Job == job.Top_Lvl_Job);
+    const oldJobs = await glDB.query(
+      `SELECT * FROM [Production].[dbo].[Job]
+          WHERE Order_Date < :orderDate AND [Status] = 'Pending';
+          `,
+      {
+        replacements: {
+          orderDate: sdfDate,
+        },
+      }
+    );
+
+    const allJobs = [...newJobs[0], ...oldJobs[0]];
+
+    const parentJobs = [];
+    for (const jb of allJobs) {
+      const subJobs = await glDB.query(
+        `
+          SELECT Parent_Job, [Component_Job]
+          FROM [Production].[dbo].[Bill_Of_Jobs]
+          WHERE Component_Job = :jobID; 
+        `,
+        {
+          replacements: {
+            jobID: jb.Job,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      if (!subJobs.length > 0) {
+        parentJobs.push(jb);
+      }
+    }
 
     //all jobs that don't have folder
 
@@ -31,36 +63,6 @@ class JobController {
     // for (let cJob of [...jobs[0], ...[{ Job: "Test11" }]]) {
     for (let cJob of parentJobs) {
       const { Job } = cJob;
-
-      if (cJob.Status == 'Template') {
-        // get and set all sub jobs
-        const subJobs = await glDB.query(
-          `
-          SELECT [Component_Job]
-          FROM [Production].[dbo].[Bill_Of_Jobs]
-          WHERE Parent_Job = :jobID; 
-        `,
-          {
-            replacements: {
-              jobID: job.Job,
-            },
-            type: glDB.QueryTypes.SELECT,
-          }
-        );
-
-        const subJobList = subJobs.map((job) => job.Component_Job);
-
-        for (const subJob of subJobList) {
-          const filePath = isWin
-            ? `\\\\gl-fs01\\GLIOrders\\${subJob}\\`
-            : `/Volumes/GLIOrders/${subJob}/`;
-
-          if (!fs.existsSync(filePath)) {
-            filteredJobs.push(subJob);
-          }
-        }
-      }
-
       const filePath = isWin
         ? `\\\\gl-fs01\\GLIOrders\\${Job}\\`
         : `/Volumes/GLIOrders/${Job}/`;
