@@ -71,9 +71,9 @@ class JobController {
           }
         );
 
-        const subJobList = subJobs.map((job) => job.Component_Job);
+        // const subJobList = subJobs.map((job) => job.Component_Job);
 
-        parentJobs = [...parentJobs, ...subJobList];
+        parentJobs = [...parentJobs, ...subJobs];
       }
     }
 

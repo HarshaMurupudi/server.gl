@@ -14,6 +14,8 @@ module.exports = () => {
     // get all new jobs with no folders
     const jobs = await jobController.getLatestJobs();
 
+    console.log(jobs);
+
     for (const job of jobs) {
       // create job folders
       const { Job } = job;
