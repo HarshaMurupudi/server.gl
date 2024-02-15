@@ -986,76 +986,72 @@ router.get('/jobs/:job/cert', async (req, res) => {
   try {
     const jobs = await glDB.query(
       `
-        SELECT 
-          Job,
-          Production_Notes,
-          Sales_Notes,
-          Engineering_Notes,
-          Job_Plan,
-          Customer_PO,
-          Part_Number,
-          Customer,
-          Status, 
-          Description,
-          Order_Quantity,
-          Promised_Quantity,
-          Completed_Quantity,
-          Promised_Date,
-          Requested_Date,
-          Ship_By_Date,
-          Lead_Days,
-          Rev,
-          Text5,
-          DeliveryKey,
-          Sales_Code,
-          Note_Text,
-          Unit_Price,
-          Ship_Via,
-          Shipped_Quantity,
-          Quote,
-          Production_Status,
-          Numeric2,
-          Comment,
-          Colors,
-          Print_Pcs,
-          Number_Up,
-          Press,
-          Process
-        FROM 
-        (
-          SELECT DISTINCT 
-            (t1.Job), t3.[Production_Notes], t3.[Sales_Notes],
-            t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
-            cast (t1.Note_Text as nvarchar(max)) as Note_Text,
-            t3.[Engineering_Notes], cast(t3.[Production_Status] as varchar(10)) as Production_Status,
-            t3.[Job_Plan], Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
-            Completed_Quantity, Promised_Date, t1.Sales_Code,
-            Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, t2.DeliveryKey,
-            Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
-            Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process
-          FROM [Production].[dbo].[Job] AS t1           
-            INNER JOIN 
-            (SELECT Job, Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey FROM [Production].[dbo].[Delivery]
-              WHERE Packlist IS NULL) AS t2 ON t1.Job = t2.Job
-            LEFT JOIN
-            (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u 
-              ON t1.User_Values = u.U_User_Values
-            
+    SELECT
+           Job,
+           Customer_PO,
+           Part_Number,
+           Customer,
+           Status,
+           Description,
+           Order_Quantity,
+           Promised_Quantity,
+           Completed_Quantity,
+           Promised_Date,
+           Requested_Date,
+           Ship_By_Date,
+           Lead_Days,
+           Rev,
+           Text5,
+           Sales_Code,
+           Note_Text,
+           Unit_Price,
+           Ship_Via,
+           Shipped_Quantity,
+           Quote,
+           Numeric2,
+           Comment,
+           Colors,
+           Print_Pcs,
+           Number_Up,
+           Press,
+           Process,
+           Packlist_Date
+         FROM
+         (
+           SELECT DISTINCT
+             (t1.Job),
+             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
+             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
+            Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
+             Completed_Quantity, Promised_Date, t1.Sales_Code,
+             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
+             Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
+             Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process,
+             Packlist_Date
+           FROM [Production].[dbo].[Job] AS t1
+         
 
-              LEFT JOIN 
-              (SELECT User_Values, Customer FROM [Production].[dbo].[Customer]) as c
-              ON t1.Customer = c.Customer
-       
-              LEFT JOIN
-              (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
-              ON c.User_Values = u2.User_Values
+             LEFT JOIN
+             (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u
+               ON t1.User_Values = u.U_User_Values
 
-              LEFT JOIN
-              (SELECT Job, DeliveryKey, Comment FROM [Production].[dbo].Delivery) as d
-              ON t2.DeliveryKey = d.DeliveryKey
 
-            WHERE t1.Status IN ('Active', 'Complete')
-            ) a
+               LEFT JOIN
+               (SELECT User_Values, Customer FROM [Production].[dbo].[Customer]) as c
+               ON t1.Customer = c.Customer
+
+               LEFT JOIN
+               (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
+               ON c.User_Values = u2.User_Values
+
+               LEFT JOIN
+               (SELECT Job,  Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey, Comment, Packlist FROM [Production].[dbo].Delivery) as d
+               ON t1.Job = d.Job
+
+               LEFT JOIN
+               (SELECT Packlist, Packlist_Date FROM [Production].[dbo].[Packlist_Header]) as ph
+               ON d.Packlist = ph.Packlist
+             ) a
         WHERE Job = :job;
       `,
       {
