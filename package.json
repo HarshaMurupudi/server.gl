@@ -7,14 +7,12 @@
     "start:build": "tsc -w",
     "start:run": "nodemon build/index.js",
     "start-prod": "cross-env NODE_ENV=production concurrently npm:start:*",
-    
     "start-dev:build": "tsc -b ./tsconfig.dev.json -w",
     "start-dev:run": "nodemon build-dev/index.js",
     "start-dev": "cross-env NODE_ENV=development concurrently npm:start-dev:*",
-
     "start-js-dev": "cross-env NODE_ENV=development nodemon build/index.js",
-    "start": "concurrently npm:start:*",  
-    "start-dev-task-runner": "cross-env NODE_ENV=development nodemon build/taskRunner.js"
+    "start": "concurrently npm:start:*",
+    "start-dev-task-runner": "cross-env NODE_ENV=development nodemon build-dev/taskRunner.js"
   },
   "repository": {
     "type": "git",

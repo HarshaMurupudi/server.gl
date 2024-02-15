@@ -65,7 +65,7 @@ class JobController {
         `,
           {
             replacements: {
-              jobID: job.Job,
+              jobID: jb.Job,
             },
             type: glDB.QueryTypes.SELECT,
           }

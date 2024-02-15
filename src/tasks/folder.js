@@ -12,32 +12,34 @@ module.exports = () => {
     console.log('Checking for new jobs every 10 seconds');
 
     // get all new jobs with no folders
-    const jobs = await jobController.getLatestJobs();
+    try {
+      const jobs = await jobController.getLatestJobs();
 
-    console.log(jobs);
+      for (const job of jobs) {
+        // create job folders
+        const { Job } = job;
 
-    for (const job of jobs) {
-      // create job folders
-      const { Job } = job;
-
-      try {
+        // try {
         await folderController.createJob(Job);
-      } catch (error) {
-        console.log(error);
+        // } catch (error) {
+        //   console.log(error);
+        // }
       }
-    }
 
-    // get all new parts with no folders
-    const parts = await partController.getLatestParts();
+      // get all new parts with no folders
+      const parts = await partController.getLatestParts();
 
-    // create part folders
-    for (const part of parts) {
-      const { Part_Number } = part;
-      try {
+      // create part folders
+      for (const part of parts) {
+        const { Part_Number } = part;
+        // try {
         await folderController.createPart(Part_Number);
-      } catch (error) {
-        console.log(error);
+        // } catch (error) {
+        //   console.log(error);
+        // }
       }
+    } catch (error) {
+      console.log(error);
     }
   });
 };
