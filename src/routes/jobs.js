@@ -1015,7 +1015,12 @@ router.get('/jobs/:job/cert', async (req, res) => {
            Number_Up,
            Press,
            Process,
-           Packlist_Date
+           Packlist_Date,
+           Invoice_Line,
+           Shipped_Date,
+           Shipped_Quantity,
+           Text2,
+           Lot
          FROM
          (
            SELECT DISTINCT
@@ -1024,15 +1029,15 @@ router.get('/jobs/:job/cert', async (req, res) => {
              cast (t1.Note_Text as nvarchar(max)) as Note_Text,
             Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
              Completed_Quantity, Promised_Date, t1.Sales_Code,
-             Requested_Date, (Promised_Date - Lead_Days - 2) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
+             Requested_Date, (Promised_Date - Lead_Days) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
              Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
              Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process,
-             Packlist_Date
+             Packlist_Date, d.Invoice_Line, d.Shipped_Date, d.Shipped_Quantity, Text2, Lot
            FROM [Production].[dbo].[Job] AS t1
          
 
              LEFT JOIN
-             (SELECT Amount1, Amount2, Numeric1, Decimal1, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u
+             (SELECT Amount1, Amount2, Numeric1, Decimal1, Text2, Text3, Text5, User_Values AS U_User_Values  FROM [Production].[dbo].[User_Values]) AS u
                ON t1.User_Values = u.U_User_Values
 
 
@@ -1045,12 +1050,16 @@ router.get('/jobs/:job/cert', async (req, res) => {
                ON c.User_Values = u2.User_Values
 
                LEFT JOIN
-               (SELECT Job,  Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey, Comment, Packlist FROM [Production].[dbo].Delivery) as d
+               (SELECT Job,  Promised_Date, Requested_Date, Promised_Quantity, DeliveryKey, Comment, Packlist, Invoice_Line, Shipped_Date, Shipped_Quantity FROM [Production].[dbo].Delivery) as d
                ON t1.Job = d.Job
 
                LEFT JOIN
                (SELECT Packlist, Packlist_Date FROM [Production].[dbo].[Packlist_Header]) as ph
                ON d.Packlist = ph.Packlist
+
+              LEFT JOIN
+               (SELECT Packlist, Lot FROM [Production].[dbo].[Packlist_Detail]) as pd
+               ON d.Packlist = pd.Packlist
              ) a
         WHERE Job = :job;
       `,
@@ -1062,6 +1071,19 @@ router.get('/jobs/:job/cert', async (req, res) => {
     );
 
     console.log(jobs[0]);
+
+    const {
+      Packlist_Date,
+      Customer_PO,
+      Part_Number,
+      Rev,
+      Invoice_Line,
+      Shipped_Date,
+      Shipped_Quantity,
+      Packlist,
+      Text2,
+      Lot,
+    } = job[0];
 
     const doc = new PDFDocument();
 
