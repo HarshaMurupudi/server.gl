@@ -24,7 +24,7 @@ class JobController {
 
     const oldJobs = await glDB.query(
       `SELECT * FROM [Production].[dbo].[Job]
-          WHERE (Order_Date > '2023-12-01' AND  Order_Date < :orderDate) AND ([Status] = 'Pending' OR [Status] = 'Template' OR [Status] = 'Active');
+          WHERE Order_Date >= DATEADD(DAY, -60, GETDATE()) AND ([Status] = 'Pending' OR [Status] = 'Template' OR [Status] = 'Active');
           `,
       {
         replacements: {
