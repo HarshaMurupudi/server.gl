@@ -17,10 +17,10 @@ module.exports = () => {
 
       for (const job of jobs) {
         // create job folders
-        const { Job } = job;
+        const { Job, Component_Job } = job;
 
         // try {
-        await folderController.createJob(Job);
+        await folderController.createJob(Job || Component_Job);
         // } catch (error) {
         //   console.log(error);
         // }
