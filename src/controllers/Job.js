@@ -83,10 +83,12 @@ class JobController {
 
     // for (let cJob of [...jobs[0], ...[{ Job: "Test11" }]]) {
     for (let cJob of parentJobs) {
-      const { Job } = cJob;
+      const { Job, Component_Job } = cJob;
+
+      const job = Job ? Job : Component_Job;
       const filePath = isWin
-        ? `\\\\gl-fs01\\GLIOrders\\${Job}\\`
-        : `/Volumes/GLIOrders/${Job}/`;
+        ? `\\\\gl-fs01\\GLIOrders\\${job}\\`
+        : `/Volumes/GLIOrders/${job}/`;
 
       if (!fs.existsSync(filePath)) {
         filteredJobs.push(cJob);
