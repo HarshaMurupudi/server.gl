@@ -35,8 +35,9 @@ const MaintenanceRequest = require("../models/requestForms/MaintenanceRequest");
 const ImprovementRequest = require("../models/requestForms/ImprovementRequest");
 const SafetyRequest = require("../models/requestForms/SafetyRequests");
 const TimeOffRequest = require("../models/requestForms/TimeOffRequests");
+const DieOrder = require("../models/requestForms/DieOrder");
 
-import { upsert } from "../utils";
+import { upsert, getNextID } from "../utils";
 
 // const upsert = async (values, condition) => {
 //     const obj = await Model
@@ -361,48 +362,84 @@ router.patch("/training/notes", async (req, res) => {
   }
 });
 
-router.patch("/training/log", async (req, res) => {
+router.patch("/requests/dieOrder", async (req, res) => {
   try {
     console.log(req.body.data);
     const {
-      data: { trainingLog },
+      data: { form },
     } = req.body;
     for (const {
-      Training_ID,
-      Date = null,
-      Trainer = null,
-      Employee_Name = null,
-      Department = null,
-      Training_Title = null,
-      Needs_Repeat = null,
-      Repeat_After = null,
-      Note = null
-    } of trainingLog) {
-      const obj = await TrainingLogNotes.findOne({
-        where: { Training_ID },
+      Die_ID,
+      Tool_ID = null,
+      Status = null,
+      Inspection_Status = null,
+      PO_Number = null,
+      Tool_Type = null,
+      Tool_Shape = null,
+      Tool_Description = null,
+      Cavity_Width = null,
+      Cavity_Height = null,
+      Cavities_Across = null,
+      Cavities_Down = null,
+      Cavities_Total = null,
+      Space_Across = null,
+      Space_Down = null,
+      Radius = null,
+      Vendor = null,
+      Comment = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const obj = await DieOrder.findOne({
+        where: { Die_ID },
       });
       if (obj) {
         obj.update({
-          Date,
-          Trainer,
-          Employee_Name,
-          Department,
-          Training_Title,
-          Needs_Repeat,
-          Repeat_After,
-          Note
+          Status,
+          Inspection_Status,
+          PO_Number,
+          Tool_Type,
+          Tool_Shape,
+          Tool_Description,
+          Cavity_Width,
+          Cavity_Height,
+          Cavities_Across,
+          Cavities_Down,
+          Cavities_Total,
+          Space_Across,
+          Space_Down,
+          Radius,
+          Vendor,
+          Comment,
+          Approver,
+          Approval_Comment,
+          Approval_Date
         });
       } else {
-        TrainingLogNotes.create({
-          Training_ID,
-          Date,
-          Trainer,
-          Employee_Name,
-          Department,
-          Training_Title,
-          Needs_Repeat,
-          Repeat_After,
-          Note
+        const toolID = await getNextID(Tool_Type);
+        DieOrder.create({
+          Die_ID,
+          Tool_ID: toolID,
+          Status,
+          Inspection_Status,
+          PO_Number,
+          Tool_Type,
+          Tool_Shape,
+          Tool_Description,
+          Cavity_Width,
+          Cavity_Height,
+          Cavities_Across,
+          Cavities_Down,
+          Cavities_Total,
+          Space_Across,
+          Space_Down,
+          Radius,
+          Vendor,
+          Comment,
+          Approver,
+          Approval_Comment,
+          Approval_Date
         });
       }
     }
@@ -907,7 +944,6 @@ router.patch("/requests/time-off", async (req, res) => {
         Approval_Comment,
         Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
-      console.log("hit");
       await upsert(TimeOffRequest, condition, values);
 
       if (!Request_ID) {

@@ -6,6 +6,11 @@ import { validate as uuidValidate } from "uuid";
 
 const today = new Date();
 
+export const getNextID = async (sequence) => {
+  const result = await sequelize.query(`SELECT NEXT VALUE FOR ${sequence} AS nextValue`);
+  return result[0][0].nextValue;
+};
+
 function getAuthHeader(accessToken) {
   // Function to append Bearer against the Access Token
   return "Bearer ".concat(accessToken);
