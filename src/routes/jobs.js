@@ -1006,7 +1006,6 @@ router.get('/jobs/:job/cert', async (req, res) => {
            Note_Text,
            Unit_Price,
            Ship_Via,
-           Shipped_Quantity,
            Quote,
            Numeric2,
            Comment,
@@ -1032,7 +1031,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
              Requested_Date, (Promised_Date - Lead_Days) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
              Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
              Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process,
-             Packlist_Date, d.Invoice_Line, d.Shipped_Date, d.Shipped_Quantity, Text2, Lot
+             Packlist_Date, d.Invoice_Line, d.Shipped_Date, Text2, Lot
            FROM [Production].[dbo].[Job] AS t1
          
 
@@ -1070,7 +1069,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
       }
     );
 
-    console.log(jobs[0]);
+    console.log(jobs[0][0]);
 
     const {
       Packlist_Date,
@@ -1083,7 +1082,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
       Packlist,
       Text2,
       Lot,
-    } = job[0];
+    } = jobs[0][0];
 
     const doc = new PDFDocument();
 
@@ -1096,6 +1095,24 @@ router.get('/jobs/:job/cert', async (req, res) => {
     // doc.fontSize(25).text(`Some ${job} with an embedded font!`, 100, 100);
 
     doc.moveTo(0, 25).lineTo(doc.page.width, 25).stroke();
+
+    // doc.fontSize(12).text(`Shipped Date`, 25, 28);
+    // doc.fontSize(16).text(`:${Shipped_Date || '-'}`, 28, 28);
+
+    doc.moveTo(0, 28).text(`Shipped Date: ${Shipped_Date || '-'}`);
+    doc.moveTo(0, 30).text(`Mfg Date: ${Packlist_Date || '-'}`);
+    doc.moveTo(0, 32).text(`PO #: ${Customer_PO || '-'}`);
+    doc.moveTo(0, 34).text(`Part #: ${Part_Number || '-'}`);
+
+    doc.moveTo(20, 28).text(`Expiration: ${Shipped_Date || '-'}`);
+    doc.moveTo(20, 30).text(`PO Line ${Invoice_Line || '-'}`);
+    doc.moveTo(20, 32).text(`Rev #: ${Rev || '-'}`);
+    doc.moveTo(20, 34).text(`Qty #: ${Shipped_Quantity || '-'}`);
+
+    doc.moveTo(20, 30).text(`Job: ${job || '-'}`);
+    doc.moveTo(20, 32).text(`P/L #: ${Packlist || '-'}`);
+    doc.moveTo(20, 28).text(`Lot: ${Lot || '-'}`);
+    doc.moveTo(20, 34).text(`UL #: ${Text2 || '-'}`);
 
     doc.pipe(res);
 
