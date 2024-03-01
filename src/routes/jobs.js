@@ -1069,7 +1069,61 @@ router.get('/jobs/:job/cert', async (req, res) => {
       }
     );
 
-    console.log(jobs[0][0]);
+    const subJobs = await glDB.query(
+      `
+          SELECT [Component_Job]
+          FROM [Production].[dbo].[Bill_Of_Jobs]
+          WHERE Parent_Job = :jobID; 
+        `,
+      {
+        replacements: {
+          jobID: job,
+        },
+        type: glDB.QueryTypes.SELECT,
+      }
+    );
+    const subJobList = subJobs.map((job) => job.Component_Job);
+
+    const allRelatedJobs = [job, ...subJobList];
+
+    const listOfJobWithMaterial = [];
+
+    for (const job of allRelatedJobs) {
+      const jobWithMaterial = await glDB.query(
+        `
+        SELECT *
+        FROM 
+            [Production].[dbo].[Material_Req]
+        WHERE 
+            Job =:jobID
+        `,
+        {
+          replacements: {
+            jobID: job,
+          },
+          type: glDB.QueryTypes.SELECT,
+        }
+      );
+
+      console.log(jobWithMaterial);
+
+      for (const j of jobWithMaterial) {
+        if (
+          listOfJobWithMaterial.map((i) => i.material).includes(j.Material) ===
+          false
+        ) {
+          listOfJobWithMaterial.push({
+            // job: j.Job,
+            material: j.Material,
+            description: j.Description,
+          });
+        }
+      }
+    }
+
+    console.log(listOfJobWithMaterial);
+
+    // console.log(jobs[0][0]);
 
     const {
       Packlist_Date,
@@ -1113,6 +1167,33 @@ router.get('/jobs/:job/cert', async (req, res) => {
     doc.moveTo(20, 32).text(`P/L #: ${Packlist || '-'}`);
     doc.moveTo(20, 28).text(`Lot: ${Lot || '-'}`);
     doc.moveTo(20, 34).text(`UL #: ${Text2 || '-'}`);
+
+    doc.moveTo(0, 125).lineTo(doc.page.width, 125).stroke();
+
+    doc.moveTo(0, 28)
+      .text(`1.) General Label certifies that the products in this shipment were produced either from materials furnished by the
+customer or from the materials listed below on this document.`);
+    doc.moveTo(0, 28)
+      .text(`2.) General Label certifies that the products included in this shipment have been manufactured by General Label
+with all the qualified personnel of our company, who are knowledgeable and responsible for maintaining all
+General Label quality programs and procedures.`);
+    doc.moveTo(0, 28)
+      .text(`3.) General Label certifies that the products included in this shipment conform to all customer purchase order
+requirements and print specifications.`);
+    doc.moveTo(0, 28)
+      .text(`4.) General Label certifies that the products included in this shipment are Compliant with RoHS 2, Directive
+2011/65/EU and compliant with RoHS 3, Directive 2015/863/EU.`);
+    doc.moveTo(0, 28)
+      .text(`5.) General Label certifies that the products included in this shipment are Compliant with EU REACH Regulation
+EC No. 1907/2006 and EU REACH 211 SVHC 01/19/2021.`);
+
+    doc.moveTo(0, 325).lineTo(doc.page.width, 325).stroke();
+
+    for (const job of listOfJobWithMaterial) {
+      doc.moveTo(0, 30).text(`${job.material} - ${job.description}`);
+    }
+
+    // listOfJobWithMaterial;
 
     doc.pipe(res);
 
