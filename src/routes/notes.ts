@@ -37,7 +37,7 @@ const SafetyRequest = require("../models/requestForms/SafetyRequests");
 const TimeOffRequest = require("../models/requestForms/TimeOffRequests");
 const DieOrder = require("../models/requestForms/DieOrder");
 
-import { upsert, getNextID } from "../utils";
+import { upsert } from "../utils";
 
 // const upsert = async (values, condition) => {
 //     const obj = await Model
@@ -49,6 +49,94 @@ import { upsert, getNextID } from "../utils";
 //     }
 //     return Model.create(values);
 //   }
+
+const sequenceMapping = {
+  'Flexible Rotary': {
+    letter:'R',
+    number: 1108
+  },
+  'Solid Die': {
+    letter:'R',
+    number: 1108
+  },
+  'Emboss': {
+    letter:'E',
+    number: 477
+  },
+  'Deboss': {
+    letter:'E',
+    number: 477
+  },
+  'Flexible Flat': {
+    letter:'F',
+    number: 1025
+  },
+  'Thermal': {
+    letter:'T',
+    number: 339
+  },
+  'Steel Rule': {
+    letter:'',
+    number: 8650
+  },
+  'Thin Plate': {
+    letter:'THIN',
+    number: 10
+  },
+};
+
+const getLastToolID = async (toolType: any) => {
+  try {
+    const lastTool = await DieOrder.findOne({
+      where: { Tool_Type: toolType },
+      order: [['Tool_ID', 'DESC']],
+      attributes: ['Tool_ID'],
+    });
+
+    if (lastTool) {
+      return lastTool.Tool_ID;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching last Tool_ID:', error);
+    return null;
+  }
+};
+
+const getNextID = async (toolType: keyof typeof sequenceMapping) => {
+  let lastToolID = await getLastToolID(toolType);
+  let oppositeID = 0;
+
+  if (toolType === "Emboss" || toolType === "Deboss") {
+    const otherToolType = toolType === "Emboss" ? "Deboss" : "Emboss";
+    const otherLastID = await getLastToolID(otherToolType);
+
+    if (otherLastID) {
+      oppositeID = parseInt(otherLastID.replace(/\D/g, ""));
+    }
+  } else if (toolType === "Flexible Rotary" || toolType === "Solid Die") {
+    const otherToolType = toolType === "Flexible Rotary" ? "Solid Die" : "Flexible Rotary";
+    const otherLastID = await getLastToolID(otherToolType);
+
+    if (otherLastID) {
+      oppositeID = parseInt(otherLastID.replace(/\D/g, ""));
+    }
+  }
+
+  let number = sequenceMapping[toolType].number + 1;
+  if (lastToolID && oppositeID) {
+    const currentID = parseInt(lastToolID.replace(/\D/g, ""));
+    number = currentID > oppositeID ? currentID + 1 : oppositeID + 1
+  } else if (lastToolID) {
+    number = parseInt(lastToolID.replace(/\D/g, "")) + 1;
+  } else if (oppositeID) {
+    number = oppositeID + 1;
+  }
+
+  const newToolID = sequenceMapping[toolType].letter + number;
+  return newToolID;
+};
 
 router.patch("/notes", async (req, res) => {
   try {
@@ -414,7 +502,7 @@ router.patch("/requests/dieOrder", async (req, res) => {
           Comment,
           Approver,
           Approval_Comment,
-          Approval_Date
+          Approval_Date: Inspection_Status === "Approved" && !Approval_Date ? new Date().toISOString() : Approval_Date,
         });
       } else {
         const toolID = await getNextID(Tool_Type);
