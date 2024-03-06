@@ -15,7 +15,7 @@ const Delivery = require('../models/Delivery');
 const router = express.Router();
 const { glDB } = require('../config/database');
 
-const doc = new PDFDocument();
+// const doc = new PDFDocument();
 
 DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -980,6 +980,45 @@ router.post('/parts/folder/:partNumber', async (req, res) => {
   }
 });
 
+router.get('/cert/:job/status', async (req, res) => {
+  try {
+    const { job } = req.params;
+
+    const jobPacklist = await glDB.query(
+      `
+      SELECT Job FROM [Production].[dbo].[Delivery] WHERE Job = :job AND Packlist IS NOT NULL;
+      `,
+      {
+        replacements: {
+          job,
+        },
+      }
+    );
+
+    console.log(jobPacklist);
+
+    if (!jobPacklist[0].length > 0) {
+      // res.status(400).json({
+      //   status: 'Error',
+      //   message: 'Packlist has not been created',
+      // });
+      // return;
+
+      throw new Error('Packlist has not been created');
+    }
+
+    res.status(200).json({
+      status: 'success',
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 'Error',
+      message: error.message,
+    });
+  }
+});
+
 router.get('/jobs/:job/cert', async (req, res) => {
   const { job } = req.params;
 
@@ -1105,8 +1144,6 @@ router.get('/jobs/:job/cert', async (req, res) => {
         }
       );
 
-      console.log(jobWithMaterial);
-
       for (const j of jobWithMaterial) {
         if (
           listOfJobWithMaterial.map((i) => i.material).includes(j.Material) ===
@@ -1121,10 +1158,6 @@ router.get('/jobs/:job/cert', async (req, res) => {
       }
     }
 
-    console.log(listOfJobWithMaterial);
-
-    // console.log(jobs[0][0]);
-
     const {
       Packlist_Date,
       Customer_PO,
@@ -1138,69 +1171,26 @@ router.get('/jobs/:job/cert', async (req, res) => {
       Lot,
     } = jobs[0][0];
 
-    const doc = new PDFDocument();
-
-    // Pipe its output somewhere, like to a file or HTTP response
-    // See below for browser usage
-    doc.pipe(fs.createWriteStream('output.pdf'));
-
-    // Embed a font, set the font size, and render some text
-    doc.fontSize(16).text(`CERTIFICATE OF CONFORMANCE`, 10, 10);
-    // doc.fontSize(25).text(`Some ${job} with an embedded font!`, 100, 100);
-
-    doc.moveTo(0, 25).lineTo(doc.page.width, 25).stroke();
-
-    // doc.fontSize(12).text(`Shipped Date`, 25, 28);
-    // doc.fontSize(16).text(`:${Shipped_Date || '-'}`, 28, 28);
-
-    doc.moveTo(0, 28).text(`Shipped Date: ${Shipped_Date || '-'}`);
-    doc.moveTo(0, 30).text(`Mfg Date: ${Packlist_Date || '-'}`);
-    doc.moveTo(0, 32).text(`PO #: ${Customer_PO || '-'}`);
-    doc.moveTo(0, 34).text(`Part #: ${Part_Number || '-'}`);
-
-    doc.moveTo(20, 28).text(`Expiration: ${Shipped_Date || '-'}`);
-    doc.moveTo(20, 30).text(`PO Line ${Invoice_Line || '-'}`);
-    doc.moveTo(20, 32).text(`Rev #: ${Rev || '-'}`);
-    doc.moveTo(20, 34).text(`Qty #: ${Shipped_Quantity || '-'}`);
-
-    doc.moveTo(20, 30).text(`Job: ${job || '-'}`);
-    doc.moveTo(20, 32).text(`P/L #: ${Packlist || '-'}`);
-    doc.moveTo(20, 28).text(`Lot: ${Lot || '-'}`);
-    doc.moveTo(20, 34).text(`UL #: ${Text2 || '-'}`);
-
-    doc.moveTo(0, 125).lineTo(doc.page.width, 125).stroke();
-
-    doc.moveTo(0, 28)
-      .text(`1.) General Label certifies that the products in this shipment were produced either from materials furnished by the
-customer or from the materials listed below on this document.`);
-    doc.moveTo(0, 28)
-      .text(`2.) General Label certifies that the products included in this shipment have been manufactured by General Label
-with all the qualified personnel of our company, who are knowledgeable and responsible for maintaining all
-General Label quality programs and procedures.`);
-    doc.moveTo(0, 28)
-      .text(`3.) General Label certifies that the products included in this shipment conform to all customer purchase order
-requirements and print specifications.`);
-    doc.moveTo(0, 28)
-      .text(`4.) General Label certifies that the products included in this shipment are Compliant with RoHS 2, Directive
-2011/65/EU and compliant with RoHS 3, Directive 2015/863/EU.`);
-    doc.moveTo(0, 28)
-      .text(`5.) General Label certifies that the products included in this shipment are Compliant with EU REACH Regulation
-EC No. 1907/2006 and EU REACH 211 SVHC 01/19/2021.`);
-
-    doc.moveTo(0, 325).lineTo(doc.page.width, 325).stroke();
-
-    for (const job of listOfJobWithMaterial) {
-      doc.moveTo(0, 30).text(`${job.material} - ${job.description}`);
-    }
-
-    // listOfJobWithMaterial;
-
-    doc.pipe(res);
-
-    doc.end();
+    res.status(200).json({
+      status: 'success',
+      cert: {
+        jobData: {
+          Packlist_Date,
+          Customer_PO,
+          Part_Number,
+          Rev,
+          Invoice_Line,
+          Shipped_Date,
+          Shipped_Quantity,
+          Packlist,
+          Text2,
+          Lot,
+          Job: job,
+        },
+        materialData: listOfJobWithMaterial,
+      },
+    });
   } catch (error) {
-    // await res.download(filePath + fileName);
-
     console.log(error);
     res.status(400).json({
       status: 'Error',
