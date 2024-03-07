@@ -12,7 +12,7 @@
     "start-dev": "cross-env NODE_ENV=development concurrently npm:start-dev:*",
     "start-js-dev": "cross-env NODE_ENV=development nodemon build/index.js",
     "start": "concurrently npm:start:*",
-    "start-dev-task-runner": "cross-env NODE_ENV=development nodemon build/taskRunner.js"
+    "start-dev-task-runner": "cross-env NODE_ENV=development nodemon build-dev/taskRunner.js"
   },
   "repository": {
     "type": "git",

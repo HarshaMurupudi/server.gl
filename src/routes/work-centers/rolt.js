@@ -1,8 +1,8 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import { getNextDate } from "../../utils";
-const Operation = require("../../models/Operation");
-const { glDB } = require("../../config/database");
+import { getNextDate } from '../../utils';
+const Operation = require('../../models/Operation');
+const { glDB } = require('../../config/database');
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ function compare(a, b) {
   return 0;
 }
 
-router.get("/rolt/jobsByWorkCenter/:workCenterName", async (req, res) => {
+router.get('/rolt/jobsByWorkCenter/:workCenterName', async (req, res) => {
   try {
     const { workCenterName } = req.params;
 
@@ -44,7 +44,7 @@ router.get("/rolt/jobsByWorkCenter/:workCenterName", async (req, res) => {
       //   (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
       // );
       const sortedJobs = jobsWithData.sort(compare);
-      if (sortedJobs[0] && sortedJobs[0]["Work_Center"] == workCenterName) {
+      if (sortedJobs[0] && sortedJobs[0]['Work_Center'] == workCenterName) {
         jobIds.push(job);
       }
     }
@@ -70,14 +70,15 @@ router.get("/rolt/jobsByWorkCenter/:workCenterName", async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
             FROM [dbo].[Job] AS j
             LEFT JOIN
             (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
               ON j.User_Values = u.U_User_Values
             LEFT JOIN [dbo].[Job_Operation] jo on j.Job = jo.Job
             LEFT JOIN 
-                  (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+                  (SELECT Job, Comment, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
                   AS del ON j.Job = del.Job
             LEFT JOIN
             (SELECT * FROM [General_Label].[dbo].[Rolt_Notes] ) AS t3 
@@ -100,7 +101,7 @@ router.get("/rolt/jobsByWorkCenter/:workCenterName", async (req, res) => {
         : [[]];
 
     for (const job of fJobs[0]) {
-      if (!job["Promised_Date"]) {
+      if (!job['Promised_Date']) {
         const rootJobDel = await glDB.query(
           `
                   SELECT * FROM [Production].[dbo].[Delivery] 
@@ -114,28 +115,28 @@ router.get("/rolt/jobsByWorkCenter/:workCenterName", async (req, res) => {
         );
 
         if (rootJobDel[0].length > 0) {
-          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
-            "Promised_Date"
+          job['Promised_Date'] = getNextDate(rootJobDel[0], 'Promised_Date')[
+            'Promised_Date'
           ];
         }
       }
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: fJobs[0].length,
       jobs: fJobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/rolt/jobs/open/:workCenterName", async (req, res) => {
+router.get('/rolt/jobs/open/:workCenterName', async (req, res) => {
   try {
     const { workCenterName } = req.params;
 
@@ -162,7 +163,8 @@ router.get("/rolt/jobs/open/:workCenterName", async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
           LEFT JOIN
           (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
@@ -171,7 +173,7 @@ router.get("/rolt/jobs/open/:workCenterName", async (req, res) => {
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
           on j.Job = jo.Job
           LEFT JOIN 
-            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+            (SELECT Job, Comment, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
             AS del ON j.Job = del.Job
           LEFT JOIN
           (SELECT * FROM [General_Label].[dbo].[Rolt_Notes]) AS t3 
@@ -212,7 +214,7 @@ router.get("/rolt/jobs/open/:workCenterName", async (req, res) => {
       //   job["Now At"] = sortedJobs[0]["Work_Center"];
       // }
 
-      if (!job["Promised_Date"]) {
+      if (!job['Promised_Date']) {
         const rootJobDel = await glDB.query(
           `
               SELECT * FROM [Production].[dbo].[Delivery] 
@@ -226,28 +228,28 @@ router.get("/rolt/jobs/open/:workCenterName", async (req, res) => {
         );
 
         if (rootJobDel[0].length > 0) {
-          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
-            "Promised_Date"
+          job['Promised_Date'] = getNextDate(rootJobDel[0], 'Promised_Date')[
+            'Promised_Date'
           ];
         }
       }
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
 });
 
-router.get("/rolt/jobs/open/:workCenterName/now-at", async (req, res) => {
+router.get('/rolt/jobs/open/:workCenterName/now-at', async (req, res) => {
   try {
     const { workCenterName } = req.params;
 
@@ -274,7 +276,8 @@ router.get("/rolt/jobs/open/:workCenterName/now-at", async (req, res) => {
             Colors,
             Print_Pcs,
             Number_Up,
-            Press
+            Press,
+            del.Comment
           from [Production].[dbo].[Job] as j
           LEFT JOIN
           (SELECT Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1, User_Values AS U_User_Values, Decimal1 AS Press FROM [Production].[dbo].[User_Values]) AS u 
@@ -283,7 +286,7 @@ router.get("/rolt/jobs/open/:workCenterName/now-at", async (req, res) => {
           (select * from [Production].[dbo].[Job_Operation] where Status in  ('O', 'S')) as jo
           on j.Job = jo.Job
           LEFT JOIN 
-            (SELECT Job, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
+            (SELECT Job, Comment, Promised_Date, Requested_Date, DeliveryKey FROM [Production].[dbo].[Delivery] WHERE Packlist IS NULL) 
             AS del ON j.Job = del.Job
           LEFT JOIN
           (SELECT * FROM [General_Label].[dbo].[Rolt_Notes]) AS t3 
@@ -316,15 +319,15 @@ router.get("/rolt/jobs/open/:workCenterName/now-at", async (req, res) => {
         return iJob.Job == job.Job;
       });
       const filteredJobs = jobsWithData.filter(
-        (fJob) => fJob.Status === "S" || fJob.Status === "O"
+        (fJob) => fJob.Status === 'S' || fJob.Status === 'O'
       );
       const sortedJobs = filteredJobs.sort(compare);
 
       if (sortedJobs.length > 0) {
-        job["Now At"] = sortedJobs[0]["Work_Center"];
+        job['Now At'] = sortedJobs[0]['Work_Center'];
       }
 
-      if (!job["Promised_Date"]) {
+      if (!job['Promised_Date']) {
         const rootJobDel = await glDB.query(
           `
               SELECT * FROM [Production].[dbo].[Delivery] 
@@ -338,22 +341,22 @@ router.get("/rolt/jobs/open/:workCenterName/now-at", async (req, res) => {
         );
 
         if (rootJobDel[0].length > 0) {
-          job["Promised_Date"] = getNextDate(rootJobDel[0], "Promised_Date")[
-            "Promised_Date"
+          job['Promised_Date'] = getNextDate(rootJobDel[0], 'Promised_Date')[
+            'Promised_Date'
           ];
         }
       }
     }
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       results: jobs[0].length,
       jobs: jobs[0],
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      status: "Error",
+      status: 'Error',
       message: error.message,
     });
   }
