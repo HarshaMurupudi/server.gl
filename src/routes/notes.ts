@@ -458,6 +458,7 @@ router.patch("/requests/dieOrder", async (req, res) => {
     } = req.body;
     for (const {
       Die_ID,
+      User = null,
       Tool_ID = null,
       Status = null,
       Inspection_Status = null,
@@ -502,7 +503,7 @@ router.patch("/requests/dieOrder", async (req, res) => {
           Comment,
           Approver,
           Approval_Comment,
-          Approval_Date: Inspection_Status === "Approved" && !Approval_Date ? new Date().toISOString() : Approval_Date,
+          Approval_Date: Inspection_Status !== null && !Approval_Date ? new Date().toISOString() : Approval_Date,
         });
       } else {
         const toolID = await getNextID(Tool_Type);
@@ -530,6 +531,135 @@ router.patch("/requests/dieOrder", async (req, res) => {
           Approval_Date
         });
       }
+      const date = new Date()
+
+      var msg;
+      var dieHTML = `
+        <div class="die-order">
+          <h3>New Die Order</h3>
+          <h4>Order Submitted By ${User} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+              <p><strong>Comment:</strong></p>
+              <p>${Comment}</p>
+          </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
+        </div>
+        `;
+
+      var approvalHTML = `
+        <div class="die-order">
+          <h3>Die Order Approved</h3>
+          <h4>Approved By ${Approver} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+            <p><strong>Order Comment:</strong></p>
+            <p>${Comment}</p>
+            <p><strong>Approval Comment:</strong></p>
+            <p>${Approval_Comment}</p>
+          </div>
+          <p>
+            <strong>
+              <br>
+              <br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox. 
+            </strong>
+          </p>
+        </div>
+      `
+
+      var rejectionHTML = 
+      `
+        <div class="die-order">
+          <h3>Die Order Rejected</h3>
+          <h4>Rejected By ${Approver} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+            <p><strong>Order Comment:</strong></p>
+            <p>${Comment}</p>
+            <p><strong>Rejection Comment:</strong></p>
+            <p>${Approval_Comment}</p>
+          </div>
+          <p>
+            <strong>
+              <br>
+              <br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox. 
+            </strong>
+          </p>
+        </div>
+      `
+
+      if (!Die_ID) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `New Die Order`,
+          html: dieHTML,
+        }
+      } else if (Inspection_Status === "Approved" && Approval_Date === null) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `Die Order Approved`,
+          html: approvalHTML,
+        }
+      } else if (Inspection_Status === "Rejected" && Approval_Date === null) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "spencererie01@gmail.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `Die Order Rejected`,
+          html: rejectionHTML,
+        }
+      }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
     }
     res.status(200).json({
       status: "success",
