@@ -995,15 +995,7 @@ router.get('/cert/:job/status', async (req, res) => {
       }
     );
 
-    console.log(jobPacklist);
-
     if (!jobPacklist[0].length > 0) {
-      // res.status(400).json({
-      //   status: 'Error',
-      //   message: 'Packlist has not been created',
-      // });
-      // return;
-
       throw new Error('Packlist has not been created');
     }
 
@@ -1058,13 +1050,14 @@ router.get('/jobs/:job/cert', async (req, res) => {
            Shipped_Date,
            Shipped_Quantity,
            Text2,
-           Lot
+           Lot,
+           Cert_Text
          FROM
          (
            SELECT DISTINCT
              (t1.Job),
              t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
-             cast (t1.Note_Text as nvarchar(max)) as Note_Text,
+             cast (t1.Note_Text as nvarchar(max)) as Note_Text, cast (u2.Note_Text as nvarchar(max)) as Cert_Text,
             Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
              Completed_Quantity, Promised_Date, t1.Sales_Code,
              Requested_Date, (Promised_Date - Lead_Days) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
@@ -1084,7 +1077,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
                ON t1.Customer = c.Customer
 
                LEFT JOIN
-               (SELECT Numeric2, User_Values FROM [Production].[dbo].User_Values) as u2
+               (SELECT Numeric2, User_Values, Note_Text FROM [Production].[dbo].User_Values) as u2
                ON c.User_Values = u2.User_Values
 
                LEFT JOIN
@@ -1166,10 +1159,18 @@ router.get('/jobs/:job/cert', async (req, res) => {
       Invoice_Line,
       Shipped_Date,
       Shipped_Quantity,
+      Promised_Quantity,
       Packlist,
       Text2,
       Lot,
+      Cert_Text,
     } = jobs[0][0];
+
+    const expDate = Shipped_Date
+      ? new Date(Shipped_Date).setFullYear(
+          new Date(Shipped_Date).getFullYear() + 2
+        )
+      : null;
 
     res.status(200).json({
       status: 'success',
@@ -1180,14 +1181,15 @@ router.get('/jobs/:job/cert', async (req, res) => {
           Part_Number,
           Rev,
           Invoice_Line,
-          Shipped_Date,
-          Shipped_Quantity,
+          Shipped_Date: expDate,
+          Shipped_Quantity: Promised_Quantity,
           Packlist,
           Text2,
           Lot,
           Job: job,
         },
         materialData: listOfJobWithMaterial,
+        certText: Cert_Text,
       },
     });
   } catch (error) {
