@@ -1051,7 +1051,8 @@ router.get('/jobs/:job/cert', async (req, res) => {
            Shipped_Quantity,
            Text2,
            Lot,
-           Cert_Text
+           Cert_Text,
+           Packlist
          FROM
          (
            SELECT DISTINCT
@@ -1063,7 +1064,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
              Requested_Date, (Promised_Date - Lead_Days) AS Ship_By_Date, Lead_Days, Rev, u.Text5, 
              Numeric2, cast(d.Comment as nvarchar(max)) as Comment,
              Amount1 AS Colors, Amount2 AS Print_Pcs, Numeric1 AS Number_Up, Decimal1 AS Press, Text3 AS Process,
-             Packlist_Date, d.Invoice_Line, d.Shipped_Date, Text2, Lot
+             Packlist_Date, d.Invoice_Line, d.Shipped_Date, Text2, Lot, d.Packlist
            FROM [Production].[dbo].[Job] AS t1
          
 
