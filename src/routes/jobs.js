@@ -1057,7 +1057,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
          (
            SELECT DISTINCT
              (t1.Job),
-             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, t1.Shipped_Quantity, t1.Quote,
+             t1.Customer_PO, t1.Unit_Price, t1.Ship_Via, d.Shipped_Quantity, t1.Quote,
              cast (t1.Note_Text as nvarchar(max)) as Note_Text, cast (u2.Note_Text as nvarchar(max)) as Cert_Text,
             Part_Number, t1.Customer, Status, Description, Order_Quantity, Promised_Quantity,
              Completed_Quantity, Promised_Date, t1.Sales_Code,
