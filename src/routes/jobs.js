@@ -1186,7 +1186,7 @@ router.get('/jobs/:job/cert', async (req, res) => {
           Shipped_Quantity: Promised_Quantity,
           Packlist,
           Text2,
-          Lot,
+          Lot: job,
           Job: job,
         },
         materialData: listOfJobWithMaterial,
