@@ -1152,30 +1152,68 @@ router.get('/jobs/:job/cert', async (req, res) => {
       }
     }
 
-    const {
-      Packlist_Date,
-      Customer_PO,
-      Part_Number,
-      Rev,
-      Invoice_Line,
-      Shipped_Date,
-      Shipped_Quantity,
-      Promised_Quantity,
-      Packlist,
-      Text2,
-      Lot,
-      Cert_Text,
-    } = jobs[0][0];
+    let cert = [];
+    for (const job of jobs[0]) {
+      // let certDetails = {};
+      const {
+        Packlist_Date,
+        Customer_PO,
+        Part_Number,
+        Rev,
+        Invoice_Line,
+        Shipped_Date,
+        Shipped_Quantity,
+        Promised_Quantity,
+        Packlist,
+        Text2,
+        Lot,
+        Cert_Text,
+        Job,
+      } = job;
 
-    const expDate = Shipped_Date
-      ? new Date(Shipped_Date).setFullYear(
-          new Date(Shipped_Date).getFullYear() + 2
-        )
-      : null;
+      const expDate = Shipped_Date
+        ? new Date(Shipped_Date).setFullYear(
+            new Date(Shipped_Date).getFullYear() + 2
+          )
+        : null;
 
-    res.status(200).json({
-      status: 'success',
-      cert: {
+      // certDetails.jobData = {
+      //   Packlist_Date,
+      //   Customer_PO,
+      //   Part_Number,
+      //   Rev,
+      //   Invoice_Line,
+      //   Shipped_Date: expDate,
+      //   Shipped_Quantity: Promised_Quantity,
+      //   Packlist,
+      //   Text2,
+      //   Lot: job,
+      //   Job: job,
+      // };
+
+      // certDetails.materialData = listOfJobWithMaterial;
+      // certDetails.certText = Cert_Text;
+
+      //   cert[Packlist] = {
+      //     jobData: {
+      //       Packlist_Date,
+      //       Customer_PO,
+      //       Part_Number,
+      //       Rev,
+      //       Invoice_Line,
+      //       Shipped_Date: expDate,
+      //       Shipped_Quantity: Promised_Quantity,
+      //       Packlist,
+      //       Text2,
+      //       Lot: job,
+      //       Job: job,
+      //     },
+      //     materialData: listOfJobWithMaterial,
+      //     certText: Cert_Text,
+      //   };
+      // }
+
+      cert.push({
         jobData: {
           Packlist_Date,
           Customer_PO,
@@ -1186,12 +1224,59 @@ router.get('/jobs/:job/cert', async (req, res) => {
           Shipped_Quantity: Promised_Quantity,
           Packlist,
           Text2,
-          Lot: job,
-          Job: job,
+          Lot: Job,
+          Job,
         },
         materialData: listOfJobWithMaterial,
         certText: Cert_Text,
-      },
+      });
+    }
+
+    // const {
+    //   Packlist_Date,
+    //   Customer_PO,
+    //   Part_Number,
+    //   Rev,
+    //   Invoice_Line,
+    //   Shipped_Date,
+    //   Shipped_Quantity,
+    //   Promised_Quantity,
+    //   Packlist,
+    //   Text2,
+    //   Lot,
+    //   Cert_Text,
+    // } = jobs[0][0];
+
+    // const expDate = Shipped_Date
+    //   ? new Date(Shipped_Date).setFullYear(
+    //       new Date(Shipped_Date).getFullYear() + 2
+    //     )
+    //   : null;
+
+    // res.status(200).json({
+    //   status: 'success',
+    //   cert: {
+    //     jobData: {
+    //       Packlist_Date,
+    //       Customer_PO,
+    //       Part_Number,
+    //       Rev,
+    //       Invoice_Line,
+    //       Shipped_Date: expDate,
+    //       Shipped_Quantity: Promised_Quantity,
+    //       Packlist,
+    //       Text2,
+    //       Lot: job,
+    //       Job: job,
+    //     },
+    //     materialData: listOfJobWithMaterial,
+    //     certText: Cert_Text,
+    //   },
+    // });
+
+    res.status(200).json({
+      status: 'success',
+      cert,
     });
   } catch (error) {
     console.log(error);
