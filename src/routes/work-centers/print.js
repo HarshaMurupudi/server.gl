@@ -60,7 +60,7 @@ router.get('/print/jobsByWorkCenter/:workCenterName', async (req, res) => {
               del.Promised_Date,
               Plan_Notes, t3.Priority,
               ROW_NUMBER() OVER (PARTITION BY
-              j.Job ORDER BY j.Sched_Start) AS row_number,
+              del.Promised_Date ORDER BY j.Sched_Start) AS row_number,
               jo.Est_Total_Hrs,
               del.DeliveryKey,
               jo.Job_OperationKey,
