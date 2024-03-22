@@ -53,35 +53,35 @@ import { upsert } from "../utils";
 const sequenceMapping = {
   'Flexible Rotary': {
     letter:'R',
-    number: 1108
+    number: 1118
   },
   'Solid Die': {
     letter:'R',
-    number: 1108
+    number: 1118
   },
   'Emboss': {
     letter:'E',
-    number: 477
+    number: 487
   },
   'Deboss': {
     letter:'E',
-    number: 477
+    number: 487
   },
   'Flexible Flat': {
     letter:'F',
-    number: 1025
+    number: 1035
   },
   'Thermal': {
     letter:'T',
-    number: 339
+    number: 349
   },
   'Steel Rule': {
     letter:'',
-    number: 8650
+    number: 8660
   },
   'Thin Plate': {
     letter:'THIN',
-    number: 10
+    number: 20
   },
 };
 
@@ -615,7 +615,7 @@ router.patch("/requests/dieOrder", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "spencererie01@gmail.com"
+                  "email": "tracey@general-label.com"
                 },
               ]
             }],
@@ -629,7 +629,10 @@ router.patch("/requests/dieOrder", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "spencererie01@gmail.com"
+                  "email": "robina@general-label.com"
+                },
+                {
+                  "email": "tracey@general-label.com"
                 },
               ]
             }],
@@ -643,7 +646,10 @@ router.patch("/requests/dieOrder", async (req, res) => {
             {
               "to": [
                 {
-                  "email": "spencererie01@gmail.com"
+                  "email": "lyn@general-label.com"
+                },
+                {
+                  "email": "tracey@general-label.com"
                 },
               ]
             }],
