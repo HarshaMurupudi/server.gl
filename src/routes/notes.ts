@@ -452,7 +452,6 @@ router.patch("/training/notes", async (req, res) => {
 
 router.patch("/requests/dieOrder", async (req, res) => {
   try {
-    console.log(req.body.data);
     const {
       data: { form },
     } = req.body;
