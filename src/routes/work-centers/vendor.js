@@ -49,7 +49,7 @@ router.get('/jobsByVendor/:vendorName', async (req, res) => {
     const fJobs = await glDB.query(
       `
         SELECT * FROM (
-          SELECT	*, ROW_NUMBER() OVER (PARTITION BY Promised_Date ORDER BY Sched_Start) AS t_row_number
+          SELECT	*, ROW_NUMBER() OVER (PARTITION BY Promised_Date ORDER BY Promised_Date) AS t_row_number
           FROM (
             SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
             j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev,
@@ -84,7 +84,7 @@ router.get('/jobsByVendor/:vendorName', async (req, res) => {
             WHERE j.[Job] IN (:jobIDs) AND jo.WC_Vendor = :vendor
           ) AS t
               WHERE t.row_number = 1 OR t.row_number = 2) AS t2
-          WHERE t2.t_row_number = 1 OR t2.row_number = 1;
+          WHERE row_number = 1;
           `,
       {
         replacements: {
