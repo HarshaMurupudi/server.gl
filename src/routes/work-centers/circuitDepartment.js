@@ -51,8 +51,7 @@ router.get('/circuit/jobsByWorkCenter/:workCenterName', async (req, res) => {
     if (jobIds.length > 0) {
       const fJobs = await glDB.query(
         `
-        SELECT * FROM (
-          SELECT	*, ROW_NUMBER() OVER (PARTITION BY Promised_Date ORDER BY Promised_Date) AS t_row_number
+          SELECT	*
           FROM (
             SELECT j.[Job], [Part_Number], [Customer], j.[Status], j.[Description], [Order_Quantity], [Completed_Quantity], [Released_Date], 
             j.Sched_Start, j.Make_Quantity, j.Note_Text, j.Sales_Code, jo.Work_Center, j.Rev, j.Quote,
@@ -60,7 +59,7 @@ router.get('/circuit/jobsByWorkCenter/:workCenterName', async (req, res) => {
             del.Promised_Date,
             Plan_Notes, t3.Priority,
             ROW_NUMBER() OVER (PARTITION BY
-            j.Job ORDER BY j.Sched_Start) AS row_number,
+            j.Job ORDER BY del.Promised_Date) AS row_number,
             jo.Est_Total_Hrs,
             del.DeliveryKey,
             jo.Job_OperationKey,
@@ -90,8 +89,7 @@ router.get('/circuit/jobsByWorkCenter/:workCenterName', async (req, res) => {
               AND (del.DeliveryKey = t3.DeliveryKey OR (del.DeliveryKey IS NULL AND t3.DeliveryKey IS NULL))
             WHERE j.[Job] IN (:jobIDs) AND jo.Work_Center = :wc
           ) AS t
-            WHERE t.row_number = 1 OR t.row_number = 2) AS t2
-        WHERE row_number = 1;
+            WHERE t.row_number = 1;
           `,
         {
           replacements: {
