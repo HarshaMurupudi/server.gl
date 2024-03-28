@@ -164,6 +164,33 @@ router.get("/requests/vacation", async (req, res) => {
     }
 });
 
+router.get("/requests/dieOrder", async (req, res) => {
+    try {
+        const die = await glDB.query(
+            `
+            SELECT *
+            FROM [General_Label].[dbo].[Die_Order]`
+        )
+        if (die.length > 0) {
+            res.status(200).json({
+                status: "success",
+                die: die[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                die: [],           
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
 router.get("/requests/eco", async (req, res) => {
     try {
         const eco = await glDB.query(
@@ -181,6 +208,34 @@ router.get("/requests/eco", async (req, res) => {
             res.status(200).json({
                 status:"success",
                 eco: [],           
+            });
+        }
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).json({
+            status: "Error",
+            message: error.message,
+        });
+    }
+});
+
+router.get("/requests/dieOrder", async (req, res) => {
+    try {
+        const die = await glDB.query(
+            `
+            SELECT * 
+            FROM [General_Label].[dbo].[Die_Order]
+            `,
+        );
+        if (die.length > 0) {
+            res.status(200).json({
+                status: "success",
+                die: die[0],
+            });
+        } else {
+            res.status(200).json({
+                status:"success",
+                die: [],           
             });
         }
     } catch (error: any) {

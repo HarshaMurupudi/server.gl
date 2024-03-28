@@ -35,6 +35,7 @@ const MaintenanceRequest = require("../models/requestForms/MaintenanceRequest");
 const ImprovementRequest = require("../models/requestForms/ImprovementRequest");
 const SafetyRequest = require("../models/requestForms/SafetyRequests");
 const TimeOffRequest = require("../models/requestForms/TimeOffRequests");
+const DieOrder = require("../models/requestForms/DieOrder");
 
 import { upsert } from "../utils";
 
@@ -48,6 +49,94 @@ import { upsert } from "../utils";
 //     }
 //     return Model.create(values);
 //   }
+
+const sequenceMapping = {
+  'Flexible Rotary': {
+    letter:'R',
+    number: 1118
+  },
+  'Solid Die': {
+    letter:'R',
+    number: 1118
+  },
+  'Emboss': {
+    letter:'E',
+    number: 487
+  },
+  'Deboss': {
+    letter:'E',
+    number: 487
+  },
+  'Flexible Flat': {
+    letter:'F',
+    number: 1035
+  },
+  'Thermal': {
+    letter:'T',
+    number: 349
+  },
+  'Steel Rule': {
+    letter:'',
+    number: 8660
+  },
+  'Thin Plate': {
+    letter:'THIN',
+    number: 20
+  },
+};
+
+const getLastToolID = async (toolType: any) => {
+  try {
+    const lastTool = await DieOrder.findOne({
+      where: { Tool_Type: toolType },
+      order: [['Tool_ID', 'DESC']],
+      attributes: ['Tool_ID'],
+    });
+
+    if (lastTool) {
+      return lastTool.Tool_ID;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching last Tool_ID:', error);
+    return null;
+  }
+};
+
+const getNextID = async (toolType: keyof typeof sequenceMapping) => {
+  let lastToolID = await getLastToolID(toolType);
+  let oppositeID = 0;
+
+  if (toolType === "Emboss" || toolType === "Deboss") {
+    const otherToolType = toolType === "Emboss" ? "Deboss" : "Emboss";
+    const otherLastID = await getLastToolID(otherToolType);
+
+    if (otherLastID) {
+      oppositeID = parseInt(otherLastID.replace(/\D/g, ""));
+    }
+  } else if (toolType === "Flexible Rotary" || toolType === "Solid Die") {
+    const otherToolType = toolType === "Flexible Rotary" ? "Solid Die" : "Flexible Rotary";
+    const otherLastID = await getLastToolID(otherToolType);
+
+    if (otherLastID) {
+      oppositeID = parseInt(otherLastID.replace(/\D/g, ""));
+    }
+  }
+
+  let number = sequenceMapping[toolType].number + 1;
+  if (lastToolID && oppositeID) {
+    const currentID = parseInt(lastToolID.replace(/\D/g, ""));
+    number = currentID > oppositeID ? currentID + 1 : oppositeID + 1
+  } else if (lastToolID) {
+    number = parseInt(lastToolID.replace(/\D/g, "")) + 1;
+  } else if (oppositeID) {
+    number = oppositeID + 1;
+  }
+
+  const newToolID = sequenceMapping[toolType].letter + number;
+  return newToolID;
+};
 
 router.patch("/notes", async (req, res) => {
   try {
@@ -361,50 +450,221 @@ router.patch("/training/notes", async (req, res) => {
   }
 });
 
-router.patch("/training/log", async (req, res) => {
+router.patch("/requests/dieOrder", async (req, res) => {
   try {
-    console.log(req.body.data);
     const {
-      data: { trainingLog },
+      data: { form },
     } = req.body;
     for (const {
-      Training_ID,
-      Date = null,
-      Trainer = null,
-      Employee_Name = null,
-      Department = null,
-      Training_Title = null,
-      Needs_Repeat = null,
-      Repeat_After = null,
-      Note = null
-    } of trainingLog) {
-      const obj = await TrainingLogNotes.findOne({
-        where: { Training_ID },
+      Die_ID,
+      User = null,
+      Tool_ID = null,
+      Status = null,
+      Inspection_Status = null,
+      PO_Number = null,
+      Tool_Type = null,
+      Tool_Shape = null,
+      Tool_Description = null,
+      Cavity_Width = null,
+      Cavity_Height = null,
+      Cavities_Across = null,
+      Cavities_Down = null,
+      Cavities_Total = null,
+      Space_Across = null,
+      Space_Down = null,
+      Radius = null,
+      Vendor = null,
+      Comment = null,
+      Approver = null,
+      Approval_Comment = null,
+      Approval_Date = null
+    } of form) {
+      const obj = await DieOrder.findOne({
+        where: { Die_ID },
       });
       if (obj) {
         obj.update({
-          Date,
-          Trainer,
-          Employee_Name,
-          Department,
-          Training_Title,
-          Needs_Repeat,
-          Repeat_After,
-          Note
+          Status,
+          Inspection_Status,
+          PO_Number,
+          Tool_Type,
+          Tool_Shape,
+          Tool_Description,
+          Cavity_Width,
+          Cavity_Height,
+          Cavities_Across,
+          Cavities_Down,
+          Cavities_Total,
+          Space_Across,
+          Space_Down,
+          Radius,
+          Vendor,
+          Comment,
+          Approver,
+          Approval_Comment,
+          Approval_Date: Inspection_Status !== null && !Approval_Date ? new Date().toISOString() : Approval_Date,
         });
       } else {
-        TrainingLogNotes.create({
-          Training_ID,
-          Date,
-          Trainer,
-          Employee_Name,
-          Department,
-          Training_Title,
-          Needs_Repeat,
-          Repeat_After,
-          Note
+        const toolID = await getNextID(Tool_Type);
+        DieOrder.create({
+          Die_ID,
+          Tool_ID: toolID,
+          Status,
+          Inspection_Status,
+          PO_Number,
+          Tool_Type,
+          Tool_Shape,
+          Tool_Description,
+          Cavity_Width,
+          Cavity_Height,
+          Cavities_Across,
+          Cavities_Down,
+          Cavities_Total,
+          Space_Across,
+          Space_Down,
+          Radius,
+          Vendor,
+          Comment,
+          Approver,
+          Approval_Comment,
+          Approval_Date
         });
       }
+      const date = new Date()
+
+      var msg;
+      var dieHTML = `
+        <div class="die-order">
+          <h3>New Die Order</h3>
+          <h4>Order Submitted By ${User} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+              <p><strong>Comment:</strong></p>
+              <p>${Comment}</p>
+          </div>
+          <p><strong><br><br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</strong></p>
+        </div>
+        `;
+
+      var approvalHTML = `
+        <div class="die-order">
+          <h3>Die Order Approved</h3>
+          <h4>Approved By ${Approver} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+            <p><strong>Order Comment:</strong></p>
+            <p>${Comment}</p>
+            <p><strong>Approval Comment:</strong></p>
+            <p>${Approval_Comment}</p>
+          </div>
+          <p>
+            <strong>
+              <br>
+              <br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox. 
+            </strong>
+          </p>
+        </div>
+      `
+
+      var rejectionHTML = 
+      `
+        <div class="die-order">
+          <h3>Die Order Rejected</h3>
+          <h4>Rejected By ${Approver} on ${date.toLocaleString()}</h4>
+          <ul>
+            <li><strong>Tool ID:</strong> ${Tool_ID}</li>
+            <li><strong>PO Number:</strong> ${PO_Number}</li>
+            <li><strong>Tool Type:</strong> ${Tool_Type}</li>
+            <li><strong>Description:</strong> ${Tool_Description}</li>
+            <li><strong>Tool Shape:</strong> ${Tool_Shape}</li>
+            <li><strong>Vendor:</strong> ${Vendor}</li>
+          </ul>
+          <div class="order-details">
+            <p><strong>Order Comment:</strong></p>
+            <p>${Comment}</p>
+            <p><strong>Rejection Comment:</strong></p>
+            <p>${Approval_Comment}</p>
+          </div>
+          <p>
+            <strong>
+              <br>
+              <br>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox. 
+            </strong>
+          </p>
+        </div>
+      `
+
+      if (!Die_ID) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "tracey@general-label.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `New Die Order`,
+          html: dieHTML,
+        }
+      } else if (Inspection_Status === "Approved" && Approval_Date === null) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "robina@general-label.com"
+                },
+                {
+                  "email": "tracey@general-label.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `Die Order Approved`,
+          html: approvalHTML,
+        }
+      } else if (Inspection_Status === "Rejected" && Approval_Date === null) {
+        msg = {
+          personalizations: [
+            {
+              "to": [
+                {
+                  "email": "lyn@general-label.com"
+                },
+                {
+                  "email": "tracey@general-label.com"
+                },
+              ]
+            }],
+          from: 'gliteam@general-label.com',
+          subject: `Die Order Rejected`,
+          html: rejectionHTML,
+        }
+      }
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error: any) => {
+            console.error(error)
+          })
     }
     res.status(200).json({
       status: "success",
@@ -907,7 +1167,6 @@ router.patch("/requests/time-off", async (req, res) => {
         Approval_Comment,
         Approval_Date: Status === "Completed" && !Approval_Date ? new Date().toISOString() : Approval_Date,
       };
-      console.log("hit");
       await upsert(TimeOffRequest, condition, values);
 
       if (!Request_ID) {
